@@ -35,8 +35,9 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# builds
+*.tar.gz
+*.apk 
+*.app
+
 app-example
-
-# shared is copied via copy-shared
-shared/
-
