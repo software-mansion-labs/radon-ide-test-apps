@@ -1,5 +1,5 @@
 import { useScheme } from '@/shared/Colors';
-import { Button, View } from 'react-native';
+import { Button, TextInput, View } from 'react-native';
 
 import devToolsEnhancer from 'redux-devtools-expo-dev-plugin';
 import {
