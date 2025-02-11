@@ -31,6 +31,7 @@ const rootReducer = (state = initialState, action) => {
 
 const store = configureStore({
   reducer: rootReducer,
+  // Comment two lines below and reload to test our first-party redux support otherwise you're testing expo dev plugins 
   devTools: false,
   enhancers: (getDefaultEnhancers) =>
     getDefaultEnhancers().concat(devToolsEnhancer()),
