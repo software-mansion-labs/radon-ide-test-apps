@@ -64,6 +64,15 @@ export function MainScreen() {
             Click a button to throw an exception and verify IDE catches that
             with "Uncaught exception" overlay.
           </Step>
+          <Step
+            label="Fetch request visible in network panel"
+            onPress={async () => {
+              const response = await fetch("https://pokeapi.co/api/v2/pokemon/ditto");
+              console.log('Response', response);
+            }}
+          >
+            Activate network panel, click button and see if fetch request is visible
+          </Step>
           <Step label="Inspector button (left and right click)">
             Click inspector button, hover over components and jump to the
             component after click. Right click the selected component and verify
