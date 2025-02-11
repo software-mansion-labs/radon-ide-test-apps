@@ -1,5 +1,5 @@
-import React from "react";
-import { useState } from "react";
+import React from 'react';
+import {useState} from 'react';
 import {
   Image,
   Pressable,
@@ -7,26 +7,32 @@ import {
   ScrollView,
   StyleSheet,
   View,
-} from "react-native";
-import { preview } from "radon-ide";
+} from 'react-native';
+import {preview} from 'radon-ide';
 
-import { Button } from "./Button";
-import { gap, useScheme } from "./Colors";
-import { Text } from "./Text";
+import {Button} from './Button';
+import {gap, useScheme} from './Colors';
+import {Text} from './Text';
 
 preview(
   <Button
     title="Button"
     onPress={() => {
-      console.log("console.log()");
+      console.log('console.log()');
     }}
-  />
+  />,
 );
 
 function printLogs() {
   // put breakpoint on the next line
-  const text = "console.log()";
+  const text = 'console.log()';
   console.log(text);
+}
+
+function fetchNetworkRequest() {
+  fetch('https://pokeapi.co/api/v2/pokemon/ditto').then(response => {
+    console.log('Response', response);
+  });
 }
 
 export function MainScreen() {
@@ -57,10 +63,9 @@ export function MainScreen() {
           <Step
             label="Check uncaught exceptions"
             onPress={() => {
-              const tryToTrow = "expected error";
+              const tryToTrow = 'expected error';
               throw new Error(tryToTrow);
-            }}
-          >
+            }}>
             Click a button to throw an exception and verify IDE catches that
             with "Uncaught exception" overlay.
           </Step>
@@ -81,16 +86,22 @@ export function MainScreen() {
             Click "Open preview" on selected component and verify it also works
             with router integration.
           </Step>
+          <Step
+            label="Fetch request visible in network panel"
+            onPress={fetchNetworkRequest}>
+            Enable network panel, navigate to it, then press button to see the
+            request being logged there.
+          </Step>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 function useStyle() {
-  const { gap, colors } = useScheme();
+  const {gap, colors} = useScheme();
   return StyleSheet.create({
-    container: { flex: 1, gap: gap, backgroundColor: colors.background },
-    stepContainer: { gap, marginHorizontal: gap * 4 },
+    container: {flex: 1, gap: gap, backgroundColor: colors.background},
+    stepContainer: {gap, marginHorizontal: gap * 4},
   });
 }
 
@@ -99,12 +110,12 @@ type StepProps = {
   children: string;
   onPress?: () => void;
 };
-function Step({ label, onPress, children }: StepProps) {
+function Step({label, onPress, children}: StepProps) {
   const [expand, setExpand] = useState(false);
 
-  let content = <Text>{"• " + label}</Text>;
+  let content = <Text>{'• ' + label}</Text>;
   if (onPress) {
-    content = <Button inline title={"• " + label} onPress={onPress} />;
+    content = <Button inline title={'• ' + label} onPress={onPress} />;
   }
 
   return (
@@ -113,7 +124,7 @@ function Step({ label, onPress, children }: StepProps) {
         {content}
         <ExpandArrow
           expanded={expand}
-          onPress={() => setExpand((expanded) => !expanded)}
+          onPress={() => setExpand(expanded => !expanded)}
         />
       </View>
       {expand && <Text style={stepStyle.description}>{children}</Text>}
@@ -121,16 +132,16 @@ function Step({ label, onPress, children }: StepProps) {
   );
 }
 const stepStyle = StyleSheet.create({
-  row: { flexDirection: "row", justifyContent: "space-between" },
-  description: { marginLeft: gap * 2, fontSize: 12 },
+  row: {flexDirection: 'row', justifyContent: 'space-between'},
+  description: {marginLeft: gap * 2, fontSize: 12},
 });
 
 function Logo() {
   return (
-    <View style={{ marginHorizontal: gap * 3 }}>
+    <View style={{marginHorizontal: gap * 3}}>
       <Image
-        source={require("./assets/radon.png")}
-        style={{ width: "100%", height: 200, objectFit: "contain" }}
+        source={require('./assets/radon.png')}
+        style={{width: '100%', height: 200, objectFit: 'contain'}}
       />
     </View>
   );
@@ -140,19 +151,19 @@ type ExpandArrowProps = {
   onPress: () => void;
   expanded: boolean;
 };
-function ExpandArrow({ expanded, onPress }: ExpandArrowProps) {
+function ExpandArrow({expanded, onPress}: ExpandArrowProps) {
   const style = useExpandArrowStyle();
   return (
     <Pressable onPress={onPress} style={style.container}>
-      <Text style={style.text}>{expanded ? "↑" : "↓"}</Text>
+      <Text style={style.text}>{expanded ? '↑' : '↓'}</Text>
     </Pressable>
   );
 }
 function useExpandArrowStyle() {
-  const { colors, gap } = useScheme();
+  const {colors, gap} = useScheme();
 
   return StyleSheet.create({
-    container: { paddingHorizontal: gap, justifyContent: "center" },
-    text: { color: colors.text },
+    container: {paddingHorizontal: gap, justifyContent: 'center'},
+    text: {color: colors.text},
   });
 }
