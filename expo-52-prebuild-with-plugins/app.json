@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "expo-52",
-    "slug": "expo-52",
+    "name": "expo52PrebuildWithPlugins",
+    "slug": "expo52PrebuildWithPlugins",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

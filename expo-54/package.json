@@ -1,5 +1,5 @@
 {
-  "name": "expo-54",
+  "name": "expo54",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -32,11 +32,11 @@
     "react-dom": "19.1.0",
     "react-native": "0.81.0",
     "react-native-gesture-handler": "~2.28.0",
-    "react-native-reanimated": "~4.0.2",
+    "react-native-reanimated": "^4.1.0",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.14.0",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "~0.4.1"
+    "react-native-worklets": "~0.5.0"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
