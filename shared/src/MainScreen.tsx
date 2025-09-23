@@ -16,13 +16,13 @@ import { Button } from "./Button";
 import { gap, useScheme } from "./Colors";
 import { Text } from "./Text";
 import { getWebSocket, initWebSocket } from "./websocket";
+import TrackableButton from "./TrackableButton";
 
 preview(
-  <Button
-    title="Button"
-    onPress={() => {
-      console.log("console.log()");
-    }}
+  <TrackableButton
+    id="preview-button"
+    title="Preview Button"
+    onPress={printLogs}
   />
 );
 
