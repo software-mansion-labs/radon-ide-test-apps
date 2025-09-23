@@ -1,5 +1,5 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Image,
   Pressable,
@@ -9,10 +9,13 @@ import {
   View,
 } from "react-native";
 import { preview } from "radon-ide";
+import { AutomatedTests } from "./automatedTests";
+import { Platform } from "react-native";
 
 import { Button } from "./Button";
 import { gap, useScheme } from "./Colors";
 import { Text } from "./Text";
+import { getWebSocket, initWebSocket } from "./websocket";
 
 preview(
   <Button
@@ -31,8 +34,22 @@ function printLogs() {
 
 export function MainScreen() {
   const style = useStyle();
+  const [connected, setConnected] = useState(false);
 
-  return (
+  useEffect(() => {
+    if (getWebSocket()) {
+      setConnected(true);
+    } else {
+      initWebSocket(
+        (msg) => console.log("Got:", msg),
+        () => setConnected(true)
+      );
+    }
+  }, []);
+
+  return connected ? (
+    <AutomatedTests />
+  ) : (
     <SafeAreaView style={style.container}>
       <Logo />
       <ScrollView>
@@ -67,11 +84,14 @@ export function MainScreen() {
           <Step
             label="Fetch request visible in network panel"
             onPress={async () => {
-              const response = await fetch("https://pokeapi.co/api/v2/pokemon/ditto");
-              console.log('Response', response);
+              const response = await fetch(
+                "https://pokeapi.co/api/v2/pokemon/ditto"
+              );
+              console.log("Response", response);
             }}
           >
-            Activate network panel, click button and see if fetch request is visible
+            Activate network panel, click button and see if fetch request is
+            visible
           </Step>
           <Step label="Inspector button (left and right click)">
             Click inspector button, hover over components and jump to the

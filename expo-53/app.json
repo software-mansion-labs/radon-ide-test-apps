@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "expo-53",
-    "slug": "expo-53",
+    "name": "expo53",
+    "slug": "expo53",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
