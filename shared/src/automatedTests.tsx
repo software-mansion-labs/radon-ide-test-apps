@@ -11,22 +11,7 @@ import { Appearance, useColorScheme, AppState } from "react-native";
 import { Dimensions } from "react-native";
 import { PixelRatio } from "react-native";
 import { getWebSocket } from "./websocket";
-
-let useRouter: (() => { push: (path: string) => void }) | null = null;
-
-try {
-  useRouter = require("expo-router").useRouter;
-} catch (e) {
-  useRouter = null;
-}
-
-preview(
-  <TrackableButton
-    id="preview-button"
-    title="Preview Button"
-    onPress={printLogs}
-  />
-);
+import router from "./ExpoRouter";
 
 async function printLogs() {
   // put breakpoint on the next line
@@ -55,7 +40,6 @@ export function AutomatedTests() {
   const style = useStyle();
   const [elementVisible, setElementVisible] = useState(true);
   const ws = getWebSocket();
-  const router = useRouter ? useRouter() : null;
 
   useEffect(() => {
     if (!ws) return;
