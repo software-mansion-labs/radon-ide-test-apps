@@ -13,6 +13,14 @@ import { PixelRatio } from "react-native";
 import { getWebSocket } from "./websocket";
 import router from "./ExpoRouter";
 
+preview(
+  <TrackableButton
+    id="preview-button"
+    title="Preview Button"
+    onPress={printLogs}
+  />
+);
+
 async function printLogs() {
   // put breakpoint on the next line
   const text = "console.log()";
