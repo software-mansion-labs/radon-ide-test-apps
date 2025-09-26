@@ -3,7 +3,7 @@
     "name": "expo54",
     "slug": "expo54",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "expo54",
     "userInterfaceStyle": "automatic",
