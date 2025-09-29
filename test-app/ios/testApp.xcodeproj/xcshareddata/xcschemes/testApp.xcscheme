@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "reactNative80.app"
-               BlueprintName = "reactNative80"
-               ReferencedContainer = "container:reactNative80.xcodeproj">
+               BuildableName = "testApp.app"
+               BlueprintName = "testApp"
+               ReferencedContainer = "container:testApp.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "reactNative80Tests.xctest"
-               BlueprintName = "reactNative80Tests"
-               ReferencedContainer = "container:reactNative80.xcodeproj">
+               BuildableName = "testAppTests.xctest"
+               BlueprintName = "testAppTests"
+               ReferencedContainer = "container:testApp.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "reactNative80.app"
-            BlueprintName = "reactNative80"
-            ReferencedContainer = "container:reactNative80.xcodeproj">
+            BuildableName = "testApp.app"
+            BlueprintName = "testApp"
+            ReferencedContainer = "container:testApp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "reactNative80.app"
-            BlueprintName = "reactNative80"
-            ReferencedContainer = "container:reactNative80.xcodeproj">
+            BuildableName = "testApp.app"
+            BlueprintName = "testApp"
+            ReferencedContainer = "container:testApp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
