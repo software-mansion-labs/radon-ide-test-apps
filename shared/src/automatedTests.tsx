@@ -12,6 +12,9 @@ import { Dimensions } from "react-native";
 import { PixelRatio } from "react-native";
 import { getWebSocket } from "./websocket";
 import router from "./ExpoRouter";
+import appConfig from "../app.json";
+
+const appName = appConfig.name ? appConfig.name : appConfig.expo.name;
 
 preview(
   <TrackableButton
@@ -44,6 +47,10 @@ function getAppState() {
   return AppState.currentState;
 }
 
+function getAppName() {
+  return appName;
+}
+
 export function AutomatedTests() {
   const style = useStyle();
   const [elementVisible, setElementVisible] = useState(true);
@@ -61,6 +68,10 @@ export function AutomatedTests() {
         ws.send(JSON.stringify({ value: getFontSize(), id: message.id }));
       } else if (message.message === `getAppState`) {
         ws.send(JSON.stringify({ value: getAppState(), id: message.id }));
+      } else if (message.message === `fetchData`) {
+        fetch(message.url);
+      } else if (message.message === `getAppName`) {
+        ws.send(JSON.stringify({ value: getAppName(), id: message.id }));
       }
     });
   }, [ws]);
