@@ -131,6 +131,16 @@ export function AutomatedTests() {
           }}
         />
       </View>
+      <View
+        style={{
+          position: "absolute",
+          top: "10%",
+          left: "10%",
+          width: "10%",
+          height: "10%",
+          backgroundColor: "yellow",
+        }}
+      />
     </View>
   );
 }
