@@ -1,15 +1,18 @@
 import React from "react";
-import { useState, useRef, useEffect } from "react";
-import { StyleSheet, View } from "react-native";
-import { preview } from "radon-ide";
+import { useState, useEffect } from "react";
+import {
+  StyleSheet,
+  View,
+  Appearance,
+  AppState,
+  Dimensions,
+  PixelRatio,
+} from "react-native";
 
+import { preview } from "radon-ide";
 import { Button } from "./Button";
 import { useScheme } from "./Colors";
 import TrackableButton from "./TrackableButton";
-import { Platform } from "react-native";
-import { Appearance, useColorScheme, AppState } from "react-native";
-import { Dimensions } from "react-native";
-import { PixelRatio } from "react-native";
 import { getWebSocket } from "./websocket";
 import router from "./ExpoRouter";
 import appConfig from "../app.json";
