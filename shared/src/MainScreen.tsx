@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Image,
   Pressable,
@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { preview } from "radon-ide";
 import { AutomatedTests } from "./automatedTests";
-import { Platform } from "react-native";
 
 import { Button } from "./Button";
 import { gap, useScheme } from "./Colors";

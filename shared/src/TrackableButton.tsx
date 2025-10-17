@@ -6,9 +6,8 @@ import {
   Pressable,
   Text,
   StyleSheet,
+  StatusBar,
 } from "react-native";
-import { StatusBar } from "react-native";
-import { Platform } from "react-native";
 import { getWebSocket } from "./websocket";
 
 const { width: phoneWidth, height: phoneHeight } = Dimensions.get("window");
