@@ -42,6 +42,9 @@ const TrackableButton = ({ id, title, onPress }: TrackableButtonProps) => {
         measure((pos) => {
           ws.send(JSON.stringify({ position: pos, id: message.id }));
         });
+      } else if (message.message === `click:${id}`) {
+        onPress?.(id);
+        ws?.send(`{"action":"${id}"}`);
       }
     });
   }, [ws]);
