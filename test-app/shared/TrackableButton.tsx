@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect } from "react";
 import {
   View,
   Button,
@@ -6,28 +6,28 @@ import {
   Pressable,
   Text,
   StyleSheet,
-} from 'react-native';
-import { StatusBar } from 'react-native';
-import { Platform } from 'react-native';
+  StatusBar,
+} from "react-native";
+import { getWebSocket } from "./websocket";
 
-const { width: phoneWidth, height: phoneHeight } = Dimensions.get('window');
+const { width: phoneWidth, height: phoneHeight } = Dimensions.get("window");
 
 type TrackableButtonProps = {
   id: string;
   title: string;
   onPress?: (id: string) => void;
-  ws: any;
 };
 
-const TrackableButton = ({ id, title, onPress, ws }: TrackableButtonProps) => {
+const TrackableButton = ({ id, title, onPress }: TrackableButtonProps) => {
   const ref = useRef<View>(null);
+  const ws = getWebSocket();
 
   const measure = (cb: (data: any) => void) => {
     ref.current?.measureInWindow((x, y, width, height) => {
       cb({
         id,
-        x: x / phoneWidth - 0.5,
-        y: (y + (StatusBar.currentHeight ?? 0)) / phoneHeight - 0.5,
+        x: x / phoneWidth,
+        y: (y + (StatusBar.currentHeight ?? 0)) / phoneHeight,
         width: width / phoneWidth,
         height: height / phoneHeight,
       });
@@ -36,10 +36,11 @@ const TrackableButton = ({ id, title, onPress, ws }: TrackableButtonProps) => {
 
   useEffect(() => {
     if (!ws) return;
-    ws.addEventListener('message', (e: any) => {
-      if (e.data === `getPosition:${id}`) {
-        measure(pos => {
-          ws.send(JSON.stringify(pos));
+    ws.addEventListener("message", (e: any) => {
+      const message = JSON.parse(e.data);
+      if (message.message === `getPosition:${id}`) {
+        measure((pos) => {
+          ws.send(JSON.stringify({ position: pos, id: message.id }));
         });
       }
     });
@@ -50,7 +51,7 @@ const TrackableButton = ({ id, title, onPress, ws }: TrackableButtonProps) => {
       style={styles.button}
       ref={ref}
       onPress={() => {
-        ws.send(`{"action":"${id}"}`);
+        ws?.send(`{"action":"${id}"}`);
         onPress?.(id);
       }}
     >
@@ -62,9 +63,9 @@ const TrackableButton = ({ id, title, onPress, ws }: TrackableButtonProps) => {
 const styles = StyleSheet.create({
   button: {
     padding: 10,
-    backgroundColor: '#5bf',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#5bf",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 
