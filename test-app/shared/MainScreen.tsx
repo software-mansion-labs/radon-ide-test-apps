@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Image,
   Pressable,
@@ -10,18 +10,18 @@ import {
 } from "react-native";
 import { preview } from "radon-ide";
 import { AutomatedTests } from "./automatedTests";
-import { Platform } from "react-native";
 
 import { Button } from "./Button";
 import { gap, useScheme } from "./Colors";
 import { Text } from "./Text";
+import { getWebSocket, initWebSocket } from "./websocket";
+import TrackableButton from "./TrackableButton";
 
 preview(
-  <Button
-    title="Button"
-    onPress={() => {
-      console.log("console.log()");
-    }}
+  <TrackableButton
+    id="preview-button"
+    title="Preview Button"
+    onPress={printLogs}
   />
 );
 
@@ -33,23 +33,21 @@ function printLogs() {
 
 export function MainScreen() {
   const style = useStyle();
-  const ws = useRef<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const host = Platform.OS === "ios" ? "localhost" : "10.0.2.2";
-    ws.current = new WebSocket(`ws://${host}:8080`);
-    ws.current.onopen = () => {
-      console.log("Connected to server");
+    if (getWebSocket()) {
       setConnected(true);
-    };
-    ws.current.addEventListener("message", (e) => {
-      console.log("server message", e.data);
-    });
+    } else {
+      initWebSocket(
+        (msg) => console.log("Got:", msg),
+        () => setConnected(true)
+      );
+    }
   }, []);
 
   return connected ? (
-    <AutomatedTests ws={ws.current} />
+    <AutomatedTests />
   ) : (
     <SafeAreaView style={style.container}>
       <Logo />
