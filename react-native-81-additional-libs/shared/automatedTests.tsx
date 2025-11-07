@@ -115,7 +115,6 @@ preview(
 
 async function printLogs() {
   // put breakpoint on the next line
-  console.log(await getCurrentLocation());
   const text = 'console.log()';
   console.log(text);
 }
