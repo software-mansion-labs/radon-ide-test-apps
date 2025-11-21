@@ -1,0 +1,10 @@
+# WARNING: THE APPID IS CREATED AT BUILD TIME, MAKE SURE IT'S CORRECT
+appId: com.swmansion.expo54
+---
+- startRecording: "button-interactions-expo54"
+- launchApp
+- tapOn: "• Test console logs and breakpoints"
+- tapOn: "• Fetch request visible in network panel"
+- tapOn: "• Check uncaught exceptions"
+- assertNotVisible: "• Create simulator/emulator"
+- stopRecording
