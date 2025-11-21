@@ -1,0 +1,8 @@
+# WARNING: THE APPID IS CREATED AT BUILD TIME, MAKE SURE IT'S CORRECT
+appId: com.swmansion.expo54
+---
+- launchApp
+- assertVisible: "• Create simulator/emulator"
+- assertVisible: "• Delete simulator/emulator"
+- assertVisible: "• Run project"
+- back
