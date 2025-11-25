@@ -27,6 +27,22 @@ preview(
   />
 );
 
+function breakpointStepInto(a: number, b: number) {
+  const result = a * b; // STEP INTO LINE
+  return result; // BREAKPOINT 4
+}
+
+function breakpointTests() {
+  console.log("Session started"); // BREAKPOINT 1
+  const product = breakpointStepInto(6, 6); // STEP OUT LINE
+  const items = ["A", "B", "C"]; // LINE AFTER FUNCTION
+  React.Children.count(items); // BREAKPOINT 2
+  for (let i = 0; i < items.length; i++) {
+    console.log("Processing item:", items[i]); // BREAKPOINT 3
+  }
+  console.log("Session ended");
+}
+
 async function printLogs() {
   // put breakpoint on the next line
   const text = "console.log()";
@@ -86,6 +102,11 @@ export function AutomatedTests() {
           id="console-log-button"
           title="Test console logs and breakpoints"
           onPress={printLogs}
+        />
+        <TrackableButton
+          id="breakpoints-button"
+          title="test breakpoints"
+          onPress={breakpointTests}
         />
         <TrackableButton
           id="uncaught-exception-button"
