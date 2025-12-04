@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP Testing Server</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: #333; text-align: center; }
+        .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .section h2 { color: #555; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .button-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; }
+        button { padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        button:hover { background: #0056b3; }
+        button.delete { background: #dc3545; }
+        button.delete:hover { background: #c82333; }
+        button.patch { background: #ffc107; color: #212529; }
+        button.patch:hover { background: #e0a800; }
+        button.put { background: #28a745; }
+        button.put:hover { background: #218838; }
+        .response { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 10px; margin-top: 10px; white-space: pre-wrap; font-family: monospace; max-height: 200px; overflow-y: auto; }
+        .input-group { margin: 10px 0; }
+        input, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .method-badge { display: inline-block; padding: 2px 6px; background: #6c757d; color: white; border-radius: 3px; font-size: 12px; margin-right: 10px; }
+        .method-badge.get { background: #28a745; }
+        .method-badge.post { background: #007bff; }
+        .method-badge.put { background: #ffc107; color: #212529; }
+        .method-badge.patch { background: #fd7e14; }
+        .method-badge.delete { background: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>HTTP Testing Server</h1>
+        <p>This server provides endpoints to test various HTTP methods and scenarios in your network inspector.</p>
+
+        <div class="section">
+            <h2><span class="method-badge get">GET</span>Data Retrieval</h2>
+            <button onclick="makeRequest('GET', '/api/get')">GET /api/get</button>
+            <div id="response-get" class="response"></div>
+        </div>
+
+        <div class="section">
+            <h2><span class="method-badge post">POST</span>Resource Creation</h2>
+            <div class="input-group">
+                <input type="text" id="post-name" placeholder="Name" value="New User">
+                <input type="email" id="post-email" placeholder="Email" value="new@example.com">
+            </div>
+            <button onclick="makePostRequest()">POST /api/post</button>
+            <div id="response-post" class="response"></div>
+        </div>
+
+        <div class="section">
+            <h2><span class="method-badge patch">PATCH</span>Partial Update</h2>
+            <div class="input-group">
+                <input type="number" id="patch-id" placeholder="User ID" value="1">
+                <input type="text" id="patch-name" placeholder="New Name" value="Updated Name">
+            </div>
+            <button class="patch" onclick="makePatchRequest()">PATCH /api/patch/:id</button>
+            <div id="response-patch" class="response"></div>
+        </div>
+
+        <div class="section">
+            <h2><span class="method-badge put">PUT</span>Full Update</h2>
+            <div class="input-group">
+                <input type="number" id="put-id" placeholder="User ID" value="1">
+                <input type="text" id="put-name" placeholder="Name" value="Full Update">
+                <input type="email" id="put-email" placeholder="Email" value="updated@example.com">
+            </div>
+            <button class="put" onclick="makePutRequest()">PUT /api/put/:id</button>
+            <div id="response-put" class="response"></div>
+        </div>
+
+        <div class="section">
+            <h2><span class="method-badge delete">DELETE</span>Resource Deletion</h2>
+            <div class="input-group">
+                <input type="number" id="delete-id" placeholder="User ID" value="1">
+            </div>
+            <button class="delete" onclick="makeDeleteRequest()">DELETE /api/delete/:id</button>
+            <div id="response-delete" class="response"></div>
+        </div>
+
+        <div class="section">
+            <h2>Other Tests</h2>
+            <div class="button-grid">
+                <button onclick="makeRequest('POST', '/api/form', 'username=test&password=123')">POST /api/form</button>
+                <button onclick="makeRequest('GET', '/api/binary')">GET /api/binary</button>
+                <button onclick="makeRequest('GET', '/api/compress')">GET /api/compress</button>
+                <button onclick="makeRequest('GET', '/api/redirect')">GET /api/redirect</button>
+                <button onclick="makeRequest('GET', '/api/error/client-error')">GET /api/error/client-error</button>
+                <button onclick="makeRequest('GET', '/api/error/server-error')">GET /api/error/server-error</button>
+                <button onclick="makeGraphQLRequest()">POST /api/graphql</button>
+                <button onclick="makeRequest('GET', '/api/image')">GET /api/image</button>
+            </div>
+            <div id="response-other" class="response"></div>
+        </div>
+
+        <div class="section">
+            <h2>File Upload Test</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="file" id="fileInput" name="profile_pic" accept="image/*">
+                <input type="text" name="description" placeholder="Description" value="Test upload">
+                <button type="button" onclick="uploadFile()">POST /api/upload</button>
+            </form>
+            <div id="response-upload" class="response"></div>
+        </div>
+    </div>
+
+    <script>
+        async function makeRequest(method, url, body = null) {
+            try {
+                const options = { method };
+                if (body) {
+                    if (typeof body === 'string') {
+                        options.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+                        options.body = body;
+                    } else {
+                        options.headers = { 'Content-Type': 'application/json' };
+                        options.body = JSON.stringify(body);
+                    }
+                }
+                
+                const response = await fetch(url, options);
+                const contentType = response.headers.get('content-type');
+                
+                let result;
+                if (contentType && contentType.startsWith('image/')) {
+                    // Handle image responses
+                    const blob = await response.blob();
+                    const imageUrl = URL.createObjectURL(blob);
+                    result = `<img src="${imageUrl}" style="max-width: 300px; max-height: 200px;" alt="Image response">`;
+                } else if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else if (contentType && contentType.includes('application/octet-stream')) {
+                    // Handle binary data
+                    const arrayBuffer = await response.arrayBuffer();
+                    result = `Binary data received (${arrayBuffer.byteLength} bytes)`;
+                } else {
+                    result = await response.text();
+                }
+                
+                return { status: response.status, data: result, contentType };
+            } catch (error) {
+                return { error: error.message };
+            }
+        }        function displayResponse(elementId, response) {
+            const element = document.getElementById(elementId);
+            if (response.error) {
+                element.textContent = 'Error: ' + response.error;
+            } else {
+                let content = 'Status: ' + response.status + '\n\n';
+                
+                if (response.contentType && response.contentType.startsWith('image/')) {
+                    // For images, display the image directly
+                    element.innerHTML = content + response.data;
+                } else {
+                    // For other content, display as formatted JSON
+                    content += JSON.stringify(response.data, null, 2);
+                    element.textContent = content;
+                }
+            }
+        }
+
+        async function makePostRequest() {
+            const name = document.getElementById('post-name').value;
+            const email = document.getElementById('post-email').value;
+            const response = await makeRequest('POST', '/api/post', { name, email });
+            displayResponse('response-post', response);
+        }
+
+        async function makePatchRequest() {
+            const id = document.getElementById('patch-id').value;
+            const name = document.getElementById('patch-name').value;
+            const response = await makeRequest('PATCH', '/api/patch/' + id, { name });
+            displayResponse('response-patch', response);
+        }
+
+        async function makePutRequest() {
+            const id = document.getElementById('put-id').value;
+            const name = document.getElementById('put-name').value;
+            const email = document.getElementById('put-email').value;
+            const response = await makeRequest('PUT', '/api/put/' + id, { name, email });
+            displayResponse('response-put', response);
+        }
+
+        async function makeDeleteRequest() {
+            const id = document.getElementById('delete-id').value;
+            const response = await makeRequest('DELETE', '/api/delete/' + id);
+            displayResponse('response-delete', response);
+        }
+
+        async function makeGraphQLRequest() {
+            const response = await makeRequest('POST', '/api/graphql', {
+                operationName: 'GetUserProfile',
+                variables: { id: '1' }
+            });
+            displayResponse('response-other', response);
+        }
+
+        async function uploadFile() {
+            const form = document.getElementById('uploadForm');
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                displayResponse('response-upload', { status: response.status, data: result });
+            } catch (error) {
+                displayResponse('response-upload', { error: error.message });
+            }
+        }
+
+        // Make initial GET request on page load
+        window.onload = () => makeRequest('GET', '/api/get').then(response => displayResponse('response-get', response));
+    </script>
+</body>
+</html>
