@@ -16,6 +16,7 @@ import { gap, useScheme } from "./Colors";
 import { Text } from "./Text";
 import { getWebSocket, initWebSocket } from "./websocket";
 import TrackableButton from "./TrackableButton";
+import { NetworkTestScreen } from "./NetworkTestScreen";
 
 preview(
   <TrackableButton
@@ -34,6 +35,7 @@ function printLogs() {
 export function MainScreen() {
   const style = useStyle();
   const [connected, setConnected] = useState(false);
+  const [showNetworkScreen, setShowNetworkScreen] = useState(false);
 
   useEffect(() => {
     if (getWebSocket()) {
@@ -45,6 +47,14 @@ export function MainScreen() {
       );
     }
   }, []);
+
+  if (showNetworkScreen) {
+    return (
+      <SafeAreaView style={style.container}>
+        <NetworkTestScreen onBack={() => setShowNetworkScreen(false)} />
+      </SafeAreaView>
+    );
+  }
 
   return connected ? (
     <AutomatedTests />
@@ -92,6 +102,13 @@ export function MainScreen() {
             Activate network panel, click button and see if fetch request is
             visible
           </Step>
+          <Step
+            label="Network testing with various request types"
+            onPress={() => setShowNetworkScreen(true)}
+          >
+            Open the network testing screen to test various HTTP request types
+            (GET, POST, PATCH, PUT, DELETE, etc.) against the testing server.
+          </Step>
           <Step label="Inspector button (left and right click)">
             Click inspector button, hover over components and jump to the
             component after click. Right click the selected component and verify
@@ -119,6 +136,20 @@ function useStyle() {
   return StyleSheet.create({
     container: { flex: 1, gap: gap, backgroundColor: colors.background },
     stepContainer: { gap, marginHorizontal: gap * 4 },
+    headerWithBackButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: gap * 2,
+      paddingHorizontal: gap * 2,
+      paddingBottom: gap * 2,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.darkerBackground,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: "600",
+      flex: 1,
+    },
   });
 }
 
