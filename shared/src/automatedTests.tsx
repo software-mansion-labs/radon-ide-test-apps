@@ -88,7 +88,12 @@ export function AutomatedTests() {
       } else if (message.message === `getAppState`) {
         ws.send(JSON.stringify({ value: getAppState(), id: message.id }));
       } else if (message.message === `fetchData`) {
-        fetch(message.url);
+        const { method = "GET", body, headers } = message;
+        fetch(message.url, {
+          method,
+          headers,
+          body: JSON.stringify(body),
+        });
       } else if (message.message === `getAppName`) {
         ws.send(JSON.stringify({ value: getAppName(), id: message.id }));
       }
