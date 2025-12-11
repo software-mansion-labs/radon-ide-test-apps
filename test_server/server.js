@@ -1,3 +1,4 @@
+
 const express = require('express');
 const multer = require('multer'); // For multipart/form-data
 const compression = require('compression'); // For GZIP/Brotli
@@ -14,11 +15,6 @@ let users = [
     { id: 2, name: "Jane Doe", email: "jane@example.com" }
 ];
 
-let cart = [
-    { id: 1, item: "Book", quantity: 1 },
-    { id: 2, item: "Pen", quantity: 2 }
-];
-
 // -- Middleware Configuration --
 
 // Serve static files from current directory
@@ -33,10 +29,8 @@ app.use(express.urlencoded({ extended: true }));
 // Configure Multer for file uploads (stores in memory to avoid filesystem clutter)
 const upload = multer({ storage: multer.memoryStorage() });
 
-// -- 1. GET Request (Data Retrieval) --
-// Scenario: Fetching users with query params.
+// 1. GET Request
 app.get('/api/get', (req, res) => {
-    // Inspector Validation: Check ?page=2&sort=desc is captured
     const { page, sort } = req.query;
     
     res.setHeader('Content-Type', 'application/json');
@@ -50,10 +44,8 @@ app.get('/api/get', (req, res) => {
     });
 });
 
-// -- 2. POST Request (Resource Creation) --
-// Scenario: User registration.
+// 2. POST Request
 app.post('/api/post', (req, res) => {
-    // Inspector Validation: Verify body capture. 
     const newUser = { id: users.length + 1, ...req.body };
     users.push(newUser);
 
@@ -64,10 +56,19 @@ app.post('/api/post', (req, res) => {
     });
 });
 
-// -- 3. PATCH Request (Partial Update) --
-// Scenario: Updating a user profile.
+// 3. POST Request with Query Params and Body
+app.post('/api/query-and-body', (req, res) => {
+    const { type, source } = req.query;
+    const { payload, extra } = req.body;
+    res.json({
+        received_query: { type, source },
+        received_body: { payload, extra },
+        message: "Query params and body received successfully"
+    });
+});
+
+// 4. PATCH Request
 app.patch('/api/patch/:id', (req, res) => {
-    // Inspector Validation: Check payload only contains modified fields.
     const id = parseInt(req.params.id);
     const user = users.find(u => u.id === id);
     if (!user) {
@@ -76,14 +77,11 @@ app.patch('/api/patch/:id', (req, res) => {
     Object.assign(user, req.body);
     console.log(`Updating profile for ID: ${req.params.id}`);
     
-    // Simulating a 204 No Content (common for updates)
     res.status(204).send();
 });
 
-// -- 4. PUT Request (Full Update) --
-// Scenario: Updating a user profile.
+// 5. PUT Request
 app.put('/api/put/:id', (req, res) => {
-    // Simulating full resource replacement
     const id = parseInt(req.params.id);
     const index = users.findIndex(u => u.id === id);
     if (index === -1) {
@@ -96,10 +94,8 @@ app.put('/api/put/:id', (req, res) => {
     });
 });
 
-// -- 5. DELETE Request --
-// Scenario: Removing a user.
+// 6. DELETE Request
 app.delete('/api/delete/:id', (req, res) => {
-    // Inspector Validation: Verify URL path ID construction.
     const id = parseInt(req.params.id);
     const index = users.findIndex(u => u.id === id);
     if (index === -1) {
@@ -109,17 +105,13 @@ app.delete('/api/delete/:id', (req, res) => {
     res.json({ message: "Delete request successful", deletedId: id });
 });
 
-// -- 6. Multipart/Form-Data (File Upload) --
-// Scenario: Testing multipart/form-data file uploads.
+// 7. Multipart/Form-Data
 app.post('/api/multipart', upload.single('multipart_data'), (req, res) => {
-    // Inspector Validation: Identify boundary strings and separate metadata from binary.
     if (!req.file) {
         return res.status(400).send('No file uploaded.');
     }
     
-    // Also capture additional text fields sent with the file
     const description = req.body.description; 
-    console.log("MULTIPART RECEIVED");
 
     res.json({
         filename: req.file.originalname,
@@ -129,10 +121,8 @@ app.post('/api/multipart', upload.single('multipart_data'), (req, res) => {
     });
 });
 
-// -- 7. URL-Encoded Forms --
-// Scenario: Testing URL-encoded forms.
+// 8. URL-Encoded Forms
 app.post('/api/form', (req, res) => {
-    // Inspector Validation: Body parsed as key-value pairs (x-www-form-urlencoded).
     const { username, password } = req.body;
     
     res.json({
@@ -142,10 +132,8 @@ app.post('/api/form', (req, res) => {
     });
 });
 
-// -- 8. Binary Data (Protobuf/Streams) --
-// Scenario: Testing binary data.
+// 9. Binary Data
 app.get('/api/binary', (req, res) => {
-    // Inspector Validation: Hex dump display.
     const buffer = Buffer.alloc(128);
     for (let i = 0; i < 128; i++) {
         buffer[i] = Math.floor(Math.random() * 256);
@@ -155,10 +143,8 @@ app.get('/api/binary', (req, res) => {
     res.send(buffer);
 });
 
-// -- 9. GZIP/Brotli Compression --
-// Scenario: Testing compression.
+// 10. GZIP/Brotli Compression
 app.get('/api/compress', compression(), (req, res) => {
-    // Inspector Validation: Show decompressed size vs network transfer size.
     const largeDataSet = [];
     for(let i=0; i<1000; i++) {
         largeDataSet.push({ id: i, text: "Repeating string to compress " + i });
@@ -167,17 +153,13 @@ app.get('/api/compress', compression(), (req, res) => {
     res.json(largeDataSet);
 });
 
-// -- 10. Redirection (3xx) --
-// Scenario: Testing HTTP redirections.
+// 11. Redirection (3xx)
 app.get('/api/redirect', (req, res) => {
-    // Inspector Validation: Show chain (301 -> 200).
     res.redirect(301, '/api/get?redirected=true');
 });
 
-// -- 11. Client Errors (4xx) --
-// Scenario: Testing client errors.
+// 12. Client Errors (4xx)
 app.get('/api/error/client-error', (req, res) => {
-    // Inspector Validation: Highlight red/orange. Parse error payload.
     res.status(403).json({ 
         error: "Forbidden", 
         message: "Invalid Token provided", 
@@ -185,10 +167,8 @@ app.get('/api/error/client-error', (req, res) => {
     });
 });
 
-// -- 12. Server Errors (5xx) --
-// Scenario: Testing server errors.
+// 13. Server Errors (5xx)
 app.get('/api/error/server-error', (req, res) => {
-    // Inspector Validation: Render raw HTML preview instead of JSON.
     res.status(503).send(`
         <html>
             <body>
@@ -201,32 +181,10 @@ app.get('/api/error/server-error', (req, res) => {
     `);
 });
 
-// -- 13. GraphQL Operations --
-// Scenario: Testing GraphQL operations.
-app.post('/api/graphql', (req, res) => {
-    // Inspector Validation: Identify operationName (GetUserProfile) and Variables.
-    const { query, operationName, variables } = req.body;
-
-    let data = {};
-    if (operationName === 'GetUserProfile') {
-        data = {
-            user: {
-                id: variables?.id || "1",
-                name: "GraphQL User"
-            }
-        };
-    } else {
-        data = { message: "Unknown operation" };
-    }
-
-    res.json({ data: data });
-});
-
-// -- 14. Network Failure --
+// 14. Network Failure
 // Note: Handled by client requesting non-existent domain.
 
-// -- 15. XHR Incremental Streaming --
-// Scenario: Legacy real-time updates.
+// 15. XHR Incremental Streaming
 app.get('/api/stream-xhr', (req, res) => {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Transfer-Encoding', 'chunked'); 
@@ -251,7 +209,7 @@ app.get('/api/stream-xhr', (req, res) => {
     }, 1000); 
 });
 
-// -- 16. Malformed: Content-Length mismatch --
+// 16. Malformed: Content-Length mismatch
 app.get('/api/error/truncated', (req, res) => {
     res.writeHead(200, {
         'Content-Type': 'application/json',
@@ -264,13 +222,13 @@ app.get('/api/error/truncated', (req, res) => {
     }, 100);
 });
 
-// -- 17. error: Invalid JSON Syntax --
+// 17. Invalid JSON Syntax
 app.get('/api/error/json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send('{ "status": "ok", "data": [1, 2, 3, "oops...'); 
 });
 
-// -- 18. error: Protocol Violation --
+// 18. Protocol Violation
 app.get('/api/error/protocol', (req, res) => {
     const socket = req.socket;
     console.log("error: Sending garbage protocol data");
@@ -281,15 +239,13 @@ app.get('/api/error/protocol', (req, res) => {
     socket.end();
 });
 
-// -- 19. Malformed: Hang --
+// 19. Malformed: Hang
 app.get('/api/error/hang', (req, res) => {
     console.log('error: Hanging connection intentionally (Zombie Request)...');
 });
 
-// -- 20. Large Body --
-// Scenario: Stress testing throughput and payload size (~5MB).
+// 20. Large Body
 app.get('/api/large-body', (req, res) => {
-    // Inspector Validation: Notice high "Content-Length" and longer "Content Download" time.
     console.log("START")
     const targetSizeMB = 5;
     const dummyString = "X ".repeat(1024); // 1KB chunk
@@ -299,22 +255,12 @@ app.get('/api/large-body', (req, res) => {
     for (let i = 0; i < iterations; i++) {
         largeData.push(dummyString);
     }
-    // res.json({
-    //     meta: { 
-    //         description: "Large Payload Test",
-    //         size_label: `${targetSizeMB} MB`, 
-    //         chunks: iterations 
-    //     },
-    //     data: largeData
-    // });
     res.send(largeData.join(""))
     console.log("END")
 });
 
-// -- 21. Delayed Response (Timeout) --
-// Scenario: Simulating High Latency or Server Processing Time.
+// 21. Delayed Response (Timeout)
 app.get('/api/delay', (req, res) => {
-    // Inspector Validation: "Waiting (TTFB)" should be ~3.0s (or slightly more).
     const delay = 3000; // 3 seconds
     console.log(`Delay: Holding request for ${delay}ms...`);
     
@@ -327,49 +273,32 @@ app.get('/api/delay', (req, res) => {
     }, delay);
 });
 
-// -- 22. Image Serving --
-// Scenario: Serving static image files.
+// 22. Image Serving
 app.get('/api/image', (req, res) => {
-    // Inspector Validation: Check Content-Type header and binary data display.
-    res.sendFile(__dirname + '/img.png');
+    res.sendFile(__dirname + '/img/img.png');
 });
 
-// -- Global 404 Handler --
+// 23. Large Image Serving
+app.get('/api/large-image', (req, res) => {
+    res.sendFile(__dirname + '/img/large_img.jpg');
+});
+
+// Global 404 Handler
 app.use((req, res) => {
     res.status(404).json({ error: "Not Found", endpoint: req.originalUrl });
 });
 
-// -- Root HTML Page for Testing --
+// Root HTML Page for Testing
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-// -- Server Initialization --
+
+// Server Initialization
 const server = http.createServer(app);
-
-// -- 22. WebSockets (WS/WSS) --
-const wss = new WebSocketServer({ server });
-
-wss.on('connection', (ws) => {
-    console.log('WS: Client connected');
-    ws.send(JSON.stringify({ type: 'WELCOME', message: 'Connected to Live Ticker' }));
-
-    ws.on('message', (message) => {
-        console.log('WS: Received:', message.toString());
-        ws.send(JSON.stringify({ type: 'ECHO', content: message.toString() }));
-    });
-
-    ws.on('close', (code, reason) => {
-        console.log(`WS: Closed with code ${code}`);
-    });
-});
 
 server.listen(port, () => {
     console.log(`Testing Server running at http://localhost:${port}`);
-    console.log(`- Standard API: /api/get`);
-    console.log(`- Malformed (Truncated): /api/error/truncated`);
-    console.log(`- Malformed (Bad JSON): /api/error/json`);
-    console.log(`- Large Body (~5MB): /api/large-body`);
-    console.log(`- 3s Delay: /api/delay`);
-    console.log(`WebSocket Server ready at ws://localhost:${port}`);
+    console.log(`- Standard API: /api/`);
+    console.log(`- Errors: /api/error/`);
 });
