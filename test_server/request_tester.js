@@ -3,8 +3,6 @@ const fetch = require('node-fetch').default;
 const FormData = require('form-data');
 const path = require('path');
 
-console.log(fetch)
-
 const BASE_URL = 'http://localhost:3000';
 const OUTPUT_FILE = path.join(__dirname, 'request_results.json');
 
