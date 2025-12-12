@@ -599,6 +599,18 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
     }
   };
 
+  // GitHub Zen Request
+  const makeGithubZenRequest = async () => {
+    setStatus("loading");
+    try {
+      const res = await fetch('https://api.github.com/zen');
+      const text = await res.text();
+      handleResponse({ zen: text }, "GITHUB_ZEN");
+    } catch (error) {
+      handleError(error, "GITHUB_ZEN");
+    }
+  };
+
   return (
     <SafeAreaView style={style.container}>
       <Logo />
@@ -635,6 +647,7 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
             title="Stream (XHR)"
             onPress={makeStreamingRequest}
           />
+          <RequestButton title="GitHub Zen" onPress={makeGithubZenRequest} />
           
           {/* Error Requests */}
           <RequestButton
