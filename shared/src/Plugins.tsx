@@ -1,7 +1,9 @@
 import { useScheme } from "@/shared/Colors";
 import { Button, TextInput, View } from "react-native";
 
-import devToolsEnhancer from "redux-devtools-expo-dev-plugin";
+import devToolsEnhancer, {
+  composeWithDevTools,
+} from "redux-devtools-expo-dev-plugin";
 import {
   QueryClient,
   QueryClientProvider,
@@ -9,6 +11,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { configureStore } from "@reduxjs/toolkit";
+import { createStore } from "redux";
 import { useReactQueryDevTools } from "@dev-plugins/react-query";
 import { useSelector, useDispatch, Provider } from "react-redux";
 import TrackableButton from "@/shared/TrackableButton";
@@ -37,6 +40,8 @@ const store = configureStore({
   enhancers: (getDefaultEnhancers) =>
     getDefaultEnhancers().concat(devToolsEnhancer()),
 });
+
+const store2 = createStore(rootReducer, composeWithDevTools());
 
 function ReduxCounter() {
   const count = useSelector((state: { count: number }) => state.count);
