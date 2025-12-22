@@ -88,11 +88,49 @@ export function AutomatedTests() {
       } else if (message.message === `getAppState`) {
         ws.send(JSON.stringify({ value: getAppState(), id: message.id }));
       } else if (message.message === `fetchData`) {
-        const { method = "GET", body, headers } = message;
+        const { method = "GET", body, headers = {}, multipart } = message;
+
+        let requestBody;
+        let requestHeaders = { ...headers };
+
+        if (multipart) {
+          if (body instanceof FormData) {
+            requestBody = body;
+          } else {
+            const formData = new FormData();
+            Object.keys(body).forEach((key) => {
+              const value = body[key];
+
+              if (value && typeof value === "object" && value._is_file) {
+                formData.append(key, {
+                  uri: value.uri,
+                  type: value.type,
+                  name: value.name,
+                } as any);
+              } else {
+                formData.append(key, value);
+              }
+            });
+            requestBody = formData;
+          }
+          delete requestHeaders["Content-Type"];
+        } else if (typeof body === "string") {
+          requestBody = body;
+          if (!requestHeaders["Content-Type"]) {
+            requestHeaders["Content-Type"] =
+              "application/x-www-form-urlencoded";
+          }
+        } else {
+          requestBody = JSON.stringify(body);
+          if (!requestHeaders["Content-Type"]) {
+            requestHeaders["Content-Type"] = "application/json";
+          }
+        }
+
         fetch(message.url, {
           method,
-          headers,
-          body: JSON.stringify(body),
+          headers: requestHeaders,
+          body: requestBody,
         });
       } else if (message.message === `getAppName`) {
         ws.send(JSON.stringify({ value: getAppName(), id: message.id }));
