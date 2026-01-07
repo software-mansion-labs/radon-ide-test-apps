@@ -217,6 +217,7 @@ app.get("/api/error/server-error", (req, res) => {
                 <h1>503 Service Unavailable</h1>
                 <p>The upstream server is currently unavailable.</p>
                 <hr>
+                <address>Nginx/1.18.0</address>
             </body>
         </html>
     `);
