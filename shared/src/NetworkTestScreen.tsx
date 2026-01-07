@@ -14,7 +14,7 @@ import { useScheme } from "./Colors";
 import { Text } from "./Text";
 import { applyPolyfills, restoreOriginalGlobals } from "./polyfill";
 
-const isIOS = Platform.OS === 'ios';
+const isIOS = Platform.OS === "ios";
 const PLATFORM_LOCALHOST = isIOS ? "localhost" : "10.0.2.2";
 
 const BASE_URL = `http://${PLATFORM_LOCALHOST}:3000/api`;
@@ -42,9 +42,7 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
   };
 
   const handleResponse = (data: any, method: string) => {
-    setResponse(
-      `${method} Response:\n${JSON.stringify(data, null, 2)}`
-    );
+    setResponse(`${method} Response:\n${JSON.stringify(data, null, 2)}`);
     setStatus("success");
   };
 
@@ -100,7 +98,8 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
           name: "Updated Name",
         }),
       });
-      const data = res.status === 204 ? { message: "No Content" } : await res.json();
+      const data =
+        res.status === 204 ? { message: "No Content" } : await res.json();
       handleResponse(data, "PATCH");
     } catch (error) {
       handleError(error, "PATCH");
@@ -248,10 +247,7 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
     try {
       const res = await fetch(`${BASE_URL}/error/client-error`);
       const data = await res.json();
-      handleResponse(
-        { status: res.status, ...data },
-        "CLIENT ERROR"
-      );
+      handleResponse({ status: res.status, ...data }, "CLIENT ERROR");
       setStatus("error");
     } catch (error) {
       handleError(error, "CLIENT ERROR");
@@ -264,10 +260,7 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
     try {
       const res = await fetch(`${BASE_URL}/error/server-error`);
       const text = await res.text();
-      handleResponse(
-        { status: res.status, message: text },
-        "SERVER ERROR"
-      );
+      handleResponse({ status: res.status, message: text }, "SERVER ERROR");
       setStatus("error");
     } catch (error) {
       handleError(error, "SERVER ERROR");
@@ -325,13 +318,43 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
       const hexString = Array.from(view)
         .map((byte) => byte.toString(16).padStart(2, "0"))
         .join(" ");
-      handleResponse({ image: hexString, size: view.length, contentType: res.headers.get('content-type') }, "IMAGE");
+      handleResponse(
+        {
+          message: "Image fetched successfully",
+          size: view.length,
+          contentType: res.headers.get("content-type"),
+        },
+        "IMAGE"
+      );
     } catch (error) {
       handleError(error, "IMAGE");
     }
   };
 
-  // 18. XHR Incremental Streaming
+  // 18. Large Image Request
+  const makeLargeImageRequest = async () => {
+    setStatus("loading");
+    try {
+      const res = await fetch(`${BASE_URL}/large-image`);
+      const arrayBuffer = await res.arrayBuffer();
+      const view = new Uint8Array(arrayBuffer);
+      const hexString = Array.from(view)
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join(" ");
+      handleResponse(
+        {
+          message: "Image fetched successfully",
+          size: view.length,
+          contentType: res.headers.get("content-type"),
+        },
+        "LARGE IMAGE"
+      );
+    } catch (error) {
+      handleError(error, "LARGE IMAGE");
+    }
+  };
+
+  // 19. XHR Incremental Streaming
   const makeStreamingRequest = () => {
     setStatus("loading");
     setResponse("");
@@ -416,7 +439,9 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
         handleResponse(data, "INVALID JSON");
       } catch (parseError: any) {
         handleError(
-          new Error(`JSON Parse Error: ${parseError.message}\nRaw response: ${text}`),
+          new Error(
+            `JSON Parse Error: ${parseError.message}\nRaw response: ${text}`
+          ),
           "INVALID JSON"
         );
       }
@@ -431,7 +456,10 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
     try {
       const res = await fetch(`${BASE_URL}/error/protocol`);
       const data = await res.text();
-      handleResponse({ message: data, status: res.status }, "PROTOCOL VIOLATION");
+      handleResponse(
+        { message: data, status: res.status },
+        "PROTOCOL VIOLATION"
+      );
     } catch (error) {
       handleError(error, "PROTOCOL VIOLATION");
     }
@@ -472,7 +500,10 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
 
       const stream = res.body;
       if (!stream) {
-        handleError(new Error("No readable stream available"), "STREAM COMPLETE");
+        handleError(
+          new Error("No readable stream available"),
+          "STREAM COMPLETE"
+        );
         return;
       }
 
@@ -484,12 +515,14 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         chunkCount++;
         const chunk = decoder.decode(value, { stream: true });
         result += chunk;
-        console.log(chunkCount)
-        setResponse(`Streaming... Chunks received: ${chunkCount}\nBytes: ${result.length}`);
+        console.log(chunkCount);
+        setResponse(
+          `Streaming... Chunks received: ${chunkCount}\nBytes: ${result.length}`
+        );
       }
 
       handleResponse(
@@ -530,11 +563,13 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         chunkCount++;
         const chunk = decoder.decode(value, { stream: true });
         result += chunk;
-        setResponse(`Streaming... Chunks received: ${chunkCount}\nBytes: ${result.length}`);
+        setResponse(
+          `Streaming... Chunks received: ${chunkCount}\nBytes: ${result.length}`
+        );
 
         if (chunkCount >= maxChunks) {
           await reader.cancel("Intentionally cancelled after 3 chunks");
@@ -556,7 +591,11 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
   };
 
   // Helper to create streaming versions of existing requests
-  const makeStreamingFetch = async (endpoint: string, options: any, label: string) => {
+  const makeStreamingFetch = async (
+    endpoint: string,
+    options: any,
+    label: string
+  ) => {
     setStatus("loading");
     setResponse("");
     try {
@@ -582,7 +621,7 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         chunkCount++;
         const chunk = decoder.decode(value, { stream: true });
         result += chunk;
@@ -590,9 +629,15 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
 
       try {
         const data = JSON.parse(result);
-        handleResponse({ ...data, _streamChunks: chunkCount }, `${label} (STREAM)`);
+        handleResponse(
+          { ...data, _streamChunks: chunkCount },
+          `${label} (STREAM)`
+        );
       } catch {
-        handleResponse({ message: result, _streamChunks: chunkCount }, `${label} (STREAM)`);
+        handleResponse(
+          { message: result, _streamChunks: chunkCount },
+          `${label} (STREAM)`
+        );
       }
     } catch (error) {
       handleError(error, `${label} (STREAM)`);
@@ -603,7 +648,7 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
   const makeGithubZenRequest = async () => {
     setStatus("loading");
     try {
-      const res = await fetch('https://api.github.com/zen');
+      const res = await fetch("https://api.github.com/zen");
       const text = await res.text();
       handleResponse({ zen: text }, "GITHUB_ZEN");
     } catch (error) {
@@ -615,18 +660,26 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
     <SafeAreaView style={style.container}>
       <Logo />
       <Text style={style.title}>Network Requests</Text>
-      
+
       <View style={style.polyfillContainer}>
-        <Pressable 
-          style={[style.polyfillButton, polyfillsEnabled && style.polyfillButtonActive]} 
+        <Pressable
+          style={[
+            style.polyfillButton,
+            polyfillsEnabled && style.polyfillButtonActive,
+          ]}
           onPress={togglePolyfills}
         >
-          <Text style={[style.polyfillButtonText, polyfillsEnabled && style.polyfillButtonTextActive]}>
+          <Text
+            style={[
+              style.polyfillButtonText,
+              polyfillsEnabled && style.polyfillButtonTextActive,
+            ]}
+          >
             {polyfillsEnabled ? "✓ Polyfills ON" : "Polyfills OFF"}
           </Text>
         </Pressable>
       </View>
-      
+
       <ScrollView style={style.scrollView} showsVerticalScrollIndicator={false}>
         <View style={style.buttonGrid}>
           {/* Good Requests */}
@@ -636,19 +689,17 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
           <RequestButton title="PUT" onPress={makePutRequest} />
           <RequestButton title="DELETE" onPress={makeDeleteRequest} />
           <RequestButton title="Multipart" onPress={makeMultipartRequest} />
-          <RequestButton title="Form" onPress={makeFormRequest} />
+          <RequestButton title="URL-Encoded Form" onPress={makeFormRequest} />
           <RequestButton title="Binary" onPress={makeBinaryRequest} />
           <RequestButton title="Compress" onPress={makeCompressionRequest} />
           <RequestButton title="Redirect" onPress={makeRedirectRequest} />
           <RequestButton title="Delay (3s)" onPress={makeDelayRequest} />
           <RequestButton title="Large Body" onPress={makeLargeBodyRequest} />
           <RequestButton title="Image" onPress={makeImageRequest} />
-          <RequestButton
-            title="Stream (XHR)"
-            onPress={makeStreamingRequest}
-          />
+          <RequestButton title="Large Image" onPress={makeLargeImageRequest} />
+          <RequestButton title="Stream (XHR)" onPress={makeStreamingRequest} />
           <RequestButton title="GitHub Zen" onPress={makeGithubZenRequest} />
-          
+
           {/* Error Requests */}
           <RequestButton
             title="Client Error"
@@ -680,12 +731,14 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
             onPress={makeHangRequest}
             variant="error"
           />
-          
+
           {/* Streaming Requests (Only with Polyfills) */}
           {polyfillsEnabled && (
             <>
               <View style={style.sectionDivider} />
-              <Text style={style.sectionTitle}>Streaming Requests (Polyfill Mode)</Text>
+              <Text style={style.sectionTitle}>
+                Streaming Requests (Polyfill Mode)
+              </Text>
               <RequestButton
                 title="Stream Complete"
                 onPress={makeStreamCompleteRequest}
@@ -698,26 +751,39 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
               />
               <RequestButton
                 title="GET (Stream)"
-                onPress={() => makeStreamingFetch('/get?page=1&sort=asc', {}, 'GET')}
+                onPress={() =>
+                  makeStreamingFetch("/get?page=1&sort=asc", {}, "GET")
+                }
                 variant="streaming"
               />
               <RequestButton
                 title="POST (Stream)"
-                onPress={() => makeStreamingFetch('/post', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ name: 'Test User', email: 'test@example.com' }),
-                }, 'POST')}
+                onPress={() =>
+                  makeStreamingFetch(
+                    "/post",
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        name: "Test User",
+                        email: "test@example.com",
+                      }),
+                    },
+                    "POST"
+                  )
+                }
                 variant="streaming"
               />
               <RequestButton
                 title="Compress (Stream)"
-                onPress={() => makeStreamingFetch('/compress', {}, 'COMPRESS')}
+                onPress={() => makeStreamingFetch("/compress", {}, "COMPRESS")}
                 variant="streaming"
               />
               <RequestButton
                 title="Large Body (Stream)"
-                onPress={() => makeStreamingFetch('/large-body', {}, 'LARGE BODY')}
+                onPress={() =>
+                  makeStreamingFetch("/large-body", {}, "LARGE BODY")
+                }
                 variant="streaming"
               />
             </>
@@ -752,10 +818,7 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
         )}
       </ScrollView>
       <View style={style.bottomContainer}>
-        <Button
-          title="← Back"
-          onPress={() => onBack?.()}
-        />
+        <Button title="← Back" onPress={() => onBack?.()} />
       </View>
     </SafeAreaView>
   );
@@ -764,7 +827,7 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
 function useStyle() {
   const { colors } = useScheme();
   const componentGap = 8;
-  
+
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -879,7 +942,11 @@ type RequestButtonProps = {
   variant?: "default" | "error" | "streaming";
 };
 
-function RequestButton({ title, onPress, variant = "default" }: RequestButtonProps) {
+function RequestButton({
+  title,
+  onPress,
+  variant = "default",
+}: RequestButtonProps) {
   const style = useRequestButtonStyle(variant);
 
   return (
@@ -893,18 +960,24 @@ function useRequestButtonStyle(variant: "default" | "error" | "streaming") {
   const { colors } = useScheme();
   const componentGap = 8;
 
-  const backgroundColor = 
-    variant === "error" ? "#FFE5E5" : 
-    variant === "streaming" ? "#E8F5E9" : 
-    colors.darkerBackground;
-  const borderColor = 
-    variant === "error" ? "#FFB3B3" : 
-    variant === "streaming" ? "#4CAF50" : 
-    colors.text;
-  const textColor = 
-    variant === "error" ? "#CC0000" : 
-    variant === "streaming" ? "#2E7D32" : 
-    colors.text;
+  const backgroundColor =
+    variant === "error"
+      ? "#FFE5E5"
+      : variant === "streaming"
+      ? "#E8F5E9"
+      : colors.darkerBackground;
+  const borderColor =
+    variant === "error"
+      ? "#FFB3B3"
+      : variant === "streaming"
+      ? "#4CAF50"
+      : colors.text;
+  const textColor =
+    variant === "error"
+      ? "#CC0000"
+      : variant === "streaming"
+      ? "#2E7D32"
+      : colors.text;
 
   return StyleSheet.create({
     button: {
@@ -925,10 +998,7 @@ function Logo() {
   const style = useLogoStyle();
   return (
     <View style={style.container}>
-      <Image
-        source={require("./assets/radon.png")}
-        style={style.image}
-      />
+      <Image source={require("./assets/radon.png")} style={style.image} />
     </View>
   );
 }
