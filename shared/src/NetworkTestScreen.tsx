@@ -294,12 +294,11 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
     setStatus("loading");
     try {
       const res = await fetch(`${BASE_URL}/large-body`);
-      const data = await res.json();
+      const data = await res.text();
       handleResponse(
         {
-          meta: data.meta,
-          data_length: data.data?.length || 0,
           message: "Large payload received successfully",
+          data_length: data.length || 0,
         },
         "LARGE BODY"
       );
@@ -771,18 +770,6 @@ export function NetworkTestScreen({ onBack }: NetworkTestScreenProps) {
                     },
                     "POST"
                   )
-                }
-                variant="streaming"
-              />
-              <RequestButton
-                title="Compress (Stream)"
-                onPress={() => makeStreamingFetch("/compress", {}, "COMPRESS")}
-                variant="streaming"
-              />
-              <RequestButton
-                title="Large Body (Stream)"
-                onPress={() =>
-                  makeStreamingFetch("/large-body", {}, "LARGE BODY")
                 }
                 variant="streaming"
               />
