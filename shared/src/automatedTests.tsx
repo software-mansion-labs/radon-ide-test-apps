@@ -208,6 +208,7 @@ export function AutomatedTests() {
           backgroundColor: "yellow",
         }}
       />
+      <View>{appName}</View>
     </View>
   );
 }
