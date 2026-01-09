@@ -7,6 +7,7 @@ import {
   AppState,
   Dimensions,
   PixelRatio,
+  Text,
 } from "react-native";
 
 import { preview } from "radon-ide";
@@ -208,7 +209,7 @@ export function AutomatedTests() {
           backgroundColor: "yellow",
         }}
       />
-      <View>{appName}</View>
+      <Text>{appName}</Text>
     </View>
   );
 }
