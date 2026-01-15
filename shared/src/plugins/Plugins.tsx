@@ -1,5 +1,5 @@
 import { useScheme } from "@/shared/Colors";
-import { Button, TextInput, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
 
 import devToolsEnhancer, {
   composeWithDevTools,
@@ -15,6 +15,9 @@ import { createStore } from "redux";
 import { useReactQueryDevTools } from "@dev-plugins/react-query";
 import { useSelector, useDispatch, Provider } from "react-redux";
 import TrackableButton from "@/shared/TrackableButton";
+import { gql } from "@apollo/client";
+import { useQuery as useApolloQuery } from "@apollo/client/react";
+import { useRouter } from "expo-router";
 
 const queryClient = new QueryClient();
 
@@ -33,7 +36,7 @@ const rootReducer = (state = initialState, action) => {
   }
 };
 
-const store = configureStore({
+const storeWithDevtoolsEnhancer = configureStore({
   reducer: rootReducer,
   // Comment two lines below and reload to test our first-party redux support otherwise you're testing expo dev plugins
   devTools: false,
@@ -41,7 +44,16 @@ const store = configureStore({
     getDefaultEnhancers().concat(devToolsEnhancer()),
 });
 
-const store2 = createStore(rootReducer, composeWithDevTools());
+const storeWithComposeWithDevTools = createStore(
+  rootReducer,
+  composeWithDevTools()
+);
+
+const USE_DEVTOOLS_ENHANCER = true;
+
+const store = USE_DEVTOOLS_ENHANCER
+  ? storeWithDevtoolsEnhancer
+  : storeWithComposeWithDevTools;
 
 function ReduxCounter() {
   const count = useSelector((state: { count: number }) => state.count);
@@ -85,6 +97,62 @@ const ReactQueryCounter = () => {
   );
 };
 
+const GET_LAUNCHES = gql`
+  query LaunchesQuery {
+    launchesPast {
+      id
+      mission_name
+    }
+  }
+`;
+
+function ApolloList() {
+  const { errors, loading, data } = useApolloQuery(GET_LAUNCHES);
+
+  const router = useRouter();
+
+  function renderLaunchItem({
+    item: { mission_name, id },
+    index,
+  }: {
+    item: {
+      mission_name: string;
+      id: string;
+    };
+    index: number;
+  }) {
+    return (
+      <TrackableButton
+        key={id}
+        title={`🛰 ${mission_name}`}
+        onPress={() => {
+          router.push(`/plugins/details?id=${id}`);
+        }}
+        id={`launchItem@${index}`}
+      />
+    );
+  }
+
+  return (
+    <>
+      <Text style={{ fontSize: 18, margin: 10 }}>
+        Apollo Client: SpaceX Launches
+      </Text>
+      {errors ? (
+        <Text>"Error!"</Text>
+      ) : loading ? (
+        <Text>"Loading..."</Text>
+      ) : (
+        <FlatList
+          style={{ maxHeight: 200 }}
+          renderItem={renderLaunchItem}
+          data={data.launchesPast}
+        />
+      )}
+    </>
+  );
+}
+
 export default function PluginsScreen() {
   const { colors } = useScheme();
 
@@ -103,6 +171,7 @@ export default function PluginsScreen() {
         >
           <ReduxCounter />
           <ReactQueryCounter />
+          <ApolloList />
         </View>
       </Provider>
     </QueryClientProvider>
