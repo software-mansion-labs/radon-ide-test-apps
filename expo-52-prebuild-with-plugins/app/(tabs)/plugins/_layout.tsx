@@ -1,13 +1,6 @@
-import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client/react";
 import { Stack } from "expo-router";
-
-const apolloClient = new ApolloClient({
-  link: new HttpLink({
-    uri: "https://main--spacex-l4uc6p.apollographos.net/graphql",
-  }),
-  cache: new InMemoryCache(),
-});
+import { apolloClient } from "@/shared/plugins/apolloClient";
 
 export default function Layout() {
   return (

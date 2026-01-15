@@ -100,12 +100,8 @@ const ReactQueryCounter = () => {
 const GET_LAUNCHES = gql`
   query LaunchesQuery {
     launchesPast {
-      mission_name
-      details
-      links {
-        flickr_images
-      }
       id
+      mission_name
     }
   }
 `;
