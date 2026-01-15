@@ -88,7 +88,7 @@ export function AutomatedTests() {
         ws.send(JSON.stringify({ value: getFontSize(), id: message.id }));
       } else if (message.message === `getAppState`) {
         ws.send(JSON.stringify({ value: getAppState(), id: message.id }));
-      } else if (message.message === `fetchData`) {
+      } else if (message.message === "fetchData") {
         const { method = "GET", body, headers = {}, multipart } = message;
 
         let requestBody;
@@ -128,11 +128,22 @@ export function AutomatedTests() {
           }
         }
 
-        fetch(message.url, {
-          method,
-          headers: requestHeaders,
-          body: requestBody,
-        });
+        if (message.url.includes("stream-xhr")) {
+          const xhr = new XMLHttpRequest();
+          xhr.open(method, message.url);
+
+          Object.keys(requestHeaders).forEach((key) => {
+            xhr.setRequestHeader(key, requestHeaders[key]);
+          });
+
+          xhr.send(requestBody);
+        } else {
+          fetch(message.url, {
+            method,
+            headers: requestHeaders,
+            body: requestBody,
+          });
+        }
       } else if (message.message === `getAppName`) {
         ws.send(JSON.stringify({ value: getAppName(), id: message.id }));
       }
