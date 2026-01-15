@@ -1,3 +1,3 @@
-import DefaultsScreen from "@/shared/plugins/ApolloDetails";
+import DetailsScreen from "@/shared/plugins/ApolloDetails";
 
-export default DefaultsScreen;
+export default DetailsScreen;
