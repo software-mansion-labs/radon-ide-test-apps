@@ -139,9 +139,9 @@ function ApolloList() {
         Apollo Client: SpaceX Launches
       </Text>
       {errors ? (
-        "Error!"
+        <Text>"Error!"</Text>
       ) : loading ? (
-        "Loading..."
+        <Text>"Loading..."</Text>
       ) : (
         <FlatList
           style={{ maxHeight: 200 }}
