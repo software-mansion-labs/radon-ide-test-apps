@@ -7,7 +7,7 @@ import {
   AppState,
   Dimensions,
   PixelRatio,
-  Text,
+  Platform
 } from "react-native";
 
 import { preview } from "radon-ide";
@@ -17,8 +17,12 @@ import TrackableButton from "./TrackableButton";
 import { getWebSocket } from "./websocket";
 import router from "./ExpoRouter";
 import appConfig from "../app.json";
+import { applyPolyfills, restoreOriginalGlobals } from "./polyfill";
 
 const appName = appConfig.name ? appConfig.name : appConfig.expo.name;
+const isIOS = Platform.OS === "ios";
+const PLATFORM_LOCALHOST = isIOS ? "localhost" : "10.0.2.2";
+const BASE_URL = `http://${PLATFORM_LOCALHOST}:8080/api`;
 
 preview(
   <TrackableButton
@@ -76,6 +80,138 @@ export function AutomatedTests() {
   const [elementVisible, setElementVisible] = useState(true);
   const ws = getWebSocket();
 
+  const handlePolyfillTest = async (testType: string) => {
+    // Ensure polyfills are active for these tests
+    await applyPolyfills();
+
+    try {
+      switch (testType) {
+        case "stream-complete": {
+          const res = await fetch(`${BASE_URL}/large-body`, {
+            // @ts-ignore
+            reactNative: { textStreaming: true }
+          });
+
+          const stream = res.body;
+          if (!stream) throw new Error("No stream found");
+
+          const reader = stream.getReader();
+          const decoder = new TextDecoder();
+          let result = "";
+          let chunks = 0;
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks++;
+            result += decoder.decode(value, { stream: true });
+          }
+
+          return {
+            status: "success",
+            type: "stream-complete",
+            chunks,
+            length: result.length
+          };
+        }
+
+        case "stream-cancel": {
+          const res = await fetch(`${BASE_URL}/large-body`, {
+            // @ts-ignore
+            reactNative: { textStreaming: true }
+          });
+
+          const stream = res.body;
+          if (!stream) throw new Error("No stream found");
+
+          const reader = stream.getReader();
+          const decoder = new TextDecoder();
+          let chunks = 0;
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks++;
+            decoder.decode(value, { stream: true });
+
+            if (chunks >= 3) {
+              await reader.cancel("Test cancelled stream");
+              break;
+            }
+          }
+
+          return {
+            status: "success",
+            type: "stream-cancel",
+            message: "Cancelled after 3 chunks"
+          };
+        }
+
+        case "stream-abandon": {
+          const res = await fetch(`${BASE_URL}/large-body`, {
+            // @ts-ignore
+            reactNative: { textStreaming: true }
+          });
+
+          const stream = res.body;
+          if (!stream) throw new Error("No stream found");
+
+          const reader = stream.getReader();
+          let chunks = 0;
+
+          // Read a few chunks then stop without calling cancel
+          while (true) {
+            const { done } = await reader.read();
+            if (done) break;
+            chunks++;
+            if (chunks >= 2) {
+              // Abandoning stream (breaking loop without cancel)
+              break;
+            }
+          }
+
+          return {
+            status: "success",
+            type: "stream-abandon",
+            message: "Abandoned after 2 chunks"
+          };
+        }
+
+        case "stream-fallback": {
+          const res = await fetch(`${BASE_URL}/large-body`, {
+            reactNative: { textStreaming: true }
+          });
+
+          const text = await res.text();
+
+          return {
+            status: "success",
+            type: "stream-fallback",
+            length: text.length
+          };
+        }
+
+        case "standard-polyfill": {
+          const res = await fetch(`${BASE_URL}/get?page=1&sort=asc`);
+          const data = await res.json();
+
+          return {
+            status: "success",
+            type: "standard-polyfill",
+            data
+          };
+        }
+
+        default:
+          return { status: "error", message: "Unknown polyfill test type" };
+      }
+    } catch (error: any) {
+      return { status: "error", message: error.message };
+    } finally {
+      restoreOriginalGlobals();
+    }
+  };
+
   useEffect(() => {
     if (!ws) return;
     ws.addEventListener("message", (e: any) => {
@@ -106,7 +242,7 @@ export function AutomatedTests() {
                 formData.append(key, {
                   uri: value.uri,
                   type: value.type,
-                  name: value.name,
+                  name: value.name
                 } as any);
               } else {
                 formData.append(key, value);
@@ -141,11 +277,13 @@ export function AutomatedTests() {
           fetch(message.url, {
             method,
             headers: requestHeaders,
-            body: requestBody,
+            body: requestBody
           });
         }
       } else if (message.message === `getAppName`) {
         ws.send(JSON.stringify({ value: getAppName(), id: message.id }));
+      } else if (message.message === `fetchWithPolyfill`) {
+        handlePolyfillTest(message.value);
       }
     });
   }, [ws]);
@@ -206,7 +344,7 @@ export function AutomatedTests() {
             height: 50,
             backgroundColor: "red",
             display: elementVisible ? "flex" : "none",
-            margin: "auto",
+            margin: "auto"
           }}
         />
       </View>
@@ -217,10 +355,9 @@ export function AutomatedTests() {
           left: "10%",
           width: "10%",
           height: "10%",
-          backgroundColor: "yellow",
+          backgroundColor: "yellow"
         }}
       />
-      <Text>{appName}</Text>
     </View>
   );
 }
@@ -233,12 +370,12 @@ function useStyle() {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      backgroundColor: colors.background,
+      backgroundColor: colors.background
     },
     container: {
       gap: gap,
-      backgroundColor: colors.background,
+      backgroundColor: colors.background
     },
-    stepContainer: { gap, marginHorizontal: gap * 4 },
+    stepContainer: { gap, marginHorizontal: gap * 4 }
   });
 }
