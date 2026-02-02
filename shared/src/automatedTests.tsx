@@ -80,14 +80,73 @@ export function AutomatedTests() {
   const [elementVisible, setElementVisible] = useState(true);
   const ws = getWebSocket();
 
-  const handlePolyfillTest = async (testType: string) => {
-    // Ensure polyfills are active for these tests
+  const prepareRequestOptions = ({
+    method = "GET",
+    headers = {},
+    body,
+    multipart
+  }: any) => {
+    let requestBody;
+    let requestHeaders = { ...headers };
+
+    if (multipart) {
+      if (body instanceof FormData) {
+        requestBody = body;
+      } else {
+        const formData = new FormData();
+        Object.keys(body).forEach((key) => {
+          const value = body[key];
+
+          if (value && typeof value === "object" && value._is_file) {
+            formData.append(key, {
+              uri: value.uri,
+              type: value.type,
+              name: value.name
+            } as any);
+          } else {
+            formData.append(key, value);
+          }
+        });
+        requestBody = formData;
+      }
+      delete requestHeaders["Content-Type"];
+    } else if (typeof body === "string") {
+      requestBody = body;
+      if (!requestHeaders["Content-Type"]) {
+        requestHeaders["Content-Type"] = "application/x-www-form-urlencoded";
+      }
+    } else if (body) {
+      requestBody = JSON.stringify(body);
+      if (!requestHeaders["Content-Type"]) {
+        requestHeaders["Content-Type"] = "application/json";
+      }
+    }
+
+    return {
+      method,
+      headers: requestHeaders,
+      body: requestBody
+    };
+  };
+
+  const handlePolyfillTest = async (payload: any) => {
     await applyPolyfills();
 
+    const { type, url } = payload;
+
+    if (!url) {
+      console.error("URL is required for polyfill tests");
+      restoreOriginalGlobals();
+      return;
+    }
+
+    const fetchOptions = prepareRequestOptions(payload);
+
     try {
-      switch (testType) {
+      switch (type) {
         case "stream-complete": {
-          const res = await fetch(`${BASE_URL}/large-body`, {
+          const res = await fetch(url, {
+            ...fetchOptions,
             // @ts-ignore
             reactNative: { textStreaming: true }
           });
@@ -97,26 +156,19 @@ export function AutomatedTests() {
 
           const reader = stream.getReader();
           const decoder = new TextDecoder();
-          let result = "";
-          let chunks = 0;
 
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            chunks++;
-            result += decoder.decode(value, { stream: true });
+            decoder.decode(value, { stream: true });
           }
-
-          return {
-            status: "success",
-            type: "stream-complete",
-            chunks,
-            length: result.length
-          };
+          console.log("test");
+          break;
         }
 
         case "stream-cancel": {
-          const res = await fetch(`${BASE_URL}/large-body`, {
+          const res = await fetch(url, {
+            ...fetchOptions,
             // @ts-ignore
             reactNative: { textStreaming: true }
           });
@@ -139,16 +191,12 @@ export function AutomatedTests() {
               break;
             }
           }
-
-          return {
-            status: "success",
-            type: "stream-cancel",
-            message: "Cancelled after 3 chunks"
-          };
+          break;
         }
 
         case "stream-abandon": {
-          const res = await fetch(`${BASE_URL}/large-body`, {
+          const res = await fetch(url, {
+            ...fetchOptions,
             // @ts-ignore
             reactNative: { textStreaming: true }
           });
@@ -159,54 +207,38 @@ export function AutomatedTests() {
           const reader = stream.getReader();
           let chunks = 0;
 
-          // Read a few chunks then stop without calling cancel
           while (true) {
             const { done } = await reader.read();
             if (done) break;
             chunks++;
             if (chunks >= 2) {
-              // Abandoning stream (breaking loop without cancel)
               break;
             }
           }
-
-          return {
-            status: "success",
-            type: "stream-abandon",
-            message: "Abandoned after 2 chunks"
-          };
+          break;
         }
 
         case "stream-fallback": {
-          const res = await fetch(`${BASE_URL}/large-body`, {
+          const res = await fetch(url, {
+            ...fetchOptions,
+            // @ts-ignore
             reactNative: { textStreaming: true }
           });
-
-          const text = await res.text();
-
-          return {
-            status: "success",
-            type: "stream-fallback",
-            length: text.length
-          };
+          await res.text();
+          break;
         }
 
         case "standard-polyfill": {
-          const res = await fetch(`${BASE_URL}/get?page=1&sort=asc`);
-          const data = await res.json();
-
-          return {
-            status: "success",
-            type: "standard-polyfill",
-            data
-          };
+          const res = await fetch(url, fetchOptions);
+          await res.text();
+          break;
         }
 
         default:
-          return { status: "error", message: "Unknown polyfill test type" };
+          console.warn("Unknown polyfill test type:", type);
       }
     } catch (error: any) {
-      return { status: "error", message: error.message };
+      console.error("Polyfill test error:", error.message);
     } finally {
       restoreOriginalGlobals();
     }
@@ -225,65 +257,24 @@ export function AutomatedTests() {
       } else if (message.message === `getAppState`) {
         ws.send(JSON.stringify({ value: getAppState(), id: message.id }));
       } else if (message.message === "fetchData") {
-        const { method = "GET", body, headers = {}, multipart } = message;
-
-        let requestBody;
-        let requestHeaders = { ...headers };
-
-        if (multipart) {
-          if (body instanceof FormData) {
-            requestBody = body;
-          } else {
-            const formData = new FormData();
-            Object.keys(body).forEach((key) => {
-              const value = body[key];
-
-              if (value && typeof value === "object" && value._is_file) {
-                formData.append(key, {
-                  uri: value.uri,
-                  type: value.type,
-                  name: value.name
-                } as any);
-              } else {
-                formData.append(key, value);
-              }
-            });
-            requestBody = formData;
-          }
-          delete requestHeaders["Content-Type"];
-        } else if (typeof body === "string") {
-          requestBody = body;
-          if (!requestHeaders["Content-Type"]) {
-            requestHeaders["Content-Type"] =
-              "application/x-www-form-urlencoded";
-          }
-        } else {
-          requestBody = JSON.stringify(body);
-          if (!requestHeaders["Content-Type"]) {
-            requestHeaders["Content-Type"] = "application/json";
-          }
-        }
+        const options = prepareRequestOptions(message);
 
         if (message.url.includes("stream-xhr")) {
           const xhr = new XMLHttpRequest();
-          xhr.open(method, message.url);
+          xhr.open(options.method, message.url);
 
-          Object.keys(requestHeaders).forEach((key) => {
-            xhr.setRequestHeader(key, requestHeaders[key]);
+          Object.keys(options.headers).forEach((key) => {
+            xhr.setRequestHeader(key, options.headers[key]);
           });
 
-          xhr.send(requestBody);
+          xhr.send(options.body);
         } else {
-          fetch(message.url, {
-            method,
-            headers: requestHeaders,
-            body: requestBody
-          });
+          fetch(message.url, options);
         }
+      } else if (message.message === `fetchWithPolyfill`) {
+        handlePolyfillTest(message);
       } else if (message.message === `getAppName`) {
         ws.send(JSON.stringify({ value: getAppName(), id: message.id }));
-      } else if (message.message === `fetchWithPolyfill`) {
-        handlePolyfillTest(message.value);
       }
     });
   }, [ws]);
