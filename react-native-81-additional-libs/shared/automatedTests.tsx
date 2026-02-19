@@ -38,6 +38,33 @@ RNLocation.configure({
   fastestInterval: 2000,
 });
 
+// export async function loadLatestPhoto() {
+//   try {
+//     if (Platform.OS === 'android') {
+//       const permission = await PermissionsAndroid.request(
+//         PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES ||
+//           PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+//       );
+//       if (permission !== PermissionsAndroid.RESULTS.GRANTED) {
+//         console.log('Permission denied');
+//         return;
+//       }
+//     }
+//     const photos = await CameraRoll.getPhotos({
+//       first: 1,
+//       assetType: 'Photos',
+//       groupTypes: 'All',
+//     });
+//     console.log('Photos loaded:', photos.edges[0]);
+//     if (photos.edges.length > 0) {
+//       const uri = photos.edges[0].node.image.uri;
+//       setLatestPhoto(uri);
+//     }
+//   } catch (error) {
+//     console.error('Error loading photos:', error);
+//   }
+// }
+
 export async function getCurrentLocation() {
   const permission = await RNLocation.requestPermission({
     ios: 'whenInUse',
