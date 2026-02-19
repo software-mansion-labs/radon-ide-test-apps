@@ -11,6 +11,7 @@ import {
   PermissionsAndroid,
   Platform,
   Text,
+  Linking,
 } from 'react-native';
 
 import { preview } from 'radon-ide';
@@ -36,33 +37,6 @@ RNLocation.configure({
   interval: 5000,
   fastestInterval: 2000,
 });
-
-// export async function loadLatestPhoto() {
-//   try {
-//     if (Platform.OS === 'android') {
-//       const permission = await PermissionsAndroid.request(
-//         PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES ||
-//           PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-//       );
-//       if (permission !== PermissionsAndroid.RESULTS.GRANTED) {
-//         console.log('Permission denied');
-//         return;
-//       }
-//     }
-//     const photos = await CameraRoll.getPhotos({
-//       first: 1,
-//       assetType: 'Photos',
-//       groupTypes: 'All',
-//     });
-//     console.log('Photos loaded:', photos.edges[0]);
-//     if (photos.edges.length > 0) {
-//       const uri = photos.edges[0].node.image.uri;
-//       setLatestPhoto(uri);
-//     }
-//   } catch (error) {
-//     console.error('Error loading photos:', error);
-//   }
-// }
 
 export async function getCurrentLocation() {
   const permission = await RNLocation.requestPermission({
@@ -105,6 +79,11 @@ async function checkBiometrics() {
   }
 }
 
+async function printLogs() {
+  const text = 'console.log()';
+  console.log(text);
+}
+
 preview(
   <TrackableButton
     id="preview-button"
@@ -127,12 +106,6 @@ function breakpointTests() {
     console.log('Processing item:', items[i]); // BREAKPOINT 3
   }
   console.log('Session ended');
-}
-
-async function printLogs() {
-  // put breakpoint on the next line
-  const text = 'console.log()';
-  console.log(text);
 }
 
 function getColorScheme() {
@@ -170,6 +143,27 @@ export function AutomatedTests() {
   const [elementVisible, setElementVisible] = useState(true);
   const ws = getWebSocket();
   const [latestPhoto, setLatestPhoto] = useState(null);
+  const [lastDeepLink, setLastDeepLink] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleUrl = (event: { url: string }) => {
+      console.log('DEEP LINK TRIGGERED:', event.url);
+
+      setLastDeepLink(event.url);
+    };
+
+    const subscription = Linking.addEventListener('url', handleUrl);
+
+    Linking.getInitialURL().then(url => {
+      if (url) {
+        handleUrl({ url });
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (!ws) return;
@@ -212,9 +206,16 @@ export function AutomatedTests() {
             id: message.id,
           }),
         );
+      } else if (message.message === `getLastDeepLink`) {
+        ws.send(
+          JSON.stringify({
+            value: lastDeepLink,
+            id: message.id,
+          }),
+        );
       }
     });
-  }, [ws]);
+  }, [ws, lastDeepLink]);
 
   return (
     <View style={style.mainContainer}>
