@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -171,6 +171,11 @@ export function AutomatedTests() {
   const ws = getWebSocket();
   const [latestPhoto, setLatestPhoto] = useState(null);
   const [lastDeepLink, setLastDeepLink] = useState<string | null>(null);
+  const lastDeepLinkRef = useRef(lastDeepLink);
+
+  useEffect(() => {
+    lastDeepLinkRef.current = lastDeepLink;
+  }, [lastDeepLink]);
 
   useEffect(() => {
     const handleUrl = (event: { url: string }) => {
@@ -236,13 +241,13 @@ export function AutomatedTests() {
       } else if (message.message === `getLastDeepLink`) {
         ws.send(
           JSON.stringify({
-            value: lastDeepLink,
+            value: lastDeepLinkRef.current,
             id: message.id,
           }),
         );
       }
     });
-  }, [ws, lastDeepLink]);
+  }, [ws]);
 
   return (
     <View style={style.mainContainer}>
