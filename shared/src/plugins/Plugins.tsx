@@ -107,7 +107,7 @@ const GET_LAUNCHES = gql`
 `;
 
 function ApolloList() {
-  const { errors, loading, data } = useApolloQuery(GET_LAUNCHES);
+  const { error, loading, data } = useApolloQuery(GET_LAUNCHES);
 
   const router = useRouter();
 
@@ -138,7 +138,7 @@ function ApolloList() {
       <Text style={{ fontSize: 18, margin: 10 }}>
         Apollo Client: SpaceX Launches
       </Text>
-      {errors ? (
+      {error ? (
         <Text>"Error!"</Text>
       ) : loading ? (
         <Text>"Loading..."</Text>
