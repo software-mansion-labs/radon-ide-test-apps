@@ -11,7 +11,7 @@ export default function Layout() {
           name="details"
           options={{
             presentation: "modal",
-            headerTitle: "Launch Details",
+            headerTitle: "Post Details",
           }}
         />
       </Stack>

@@ -97,26 +97,28 @@ const ReactQueryCounter = () => {
   );
 };
 
-const GET_LAUNCHES = gql`
-  query LaunchesQuery {
-    launchesPast {
-      id
-      mission_name
+const GET_POSTS = gql`
+  query PostsQuery {
+    posts {
+      data {
+        id
+        title
+      }
     }
   }
 `;
 
 function ApolloList() {
-  const { error, loading, data } = useApolloQuery(GET_LAUNCHES);
+  const { error, loading, data } = useApolloQuery(GET_POSTS);
 
   const router = useRouter();
 
-  function renderLaunchItem({
-    item: { mission_name, id },
+  function renderPostItem({
+    item: { title, id },
     index,
   }: {
     item: {
-      mission_name: string;
+      title: string;
       id: string;
     };
     index: number;
@@ -124,7 +126,7 @@ function ApolloList() {
     return (
       <TrackableButton
         key={id}
-        title={`🛰 ${mission_name}`}
+        title={`📝 ${title}`}
         onPress={() => {
           router.push(`/plugins/details?id=${id}`);
         }}
@@ -136,7 +138,7 @@ function ApolloList() {
   return (
     <>
       <Text style={{ fontSize: 18, margin: 10 }}>
-        Apollo Client: SpaceX Launches
+        Apollo Client: Posts
       </Text>
       {error ? (
         <Text>"Error!"</Text>
@@ -145,8 +147,8 @@ function ApolloList() {
       ) : (
         <FlatList
           style={{ maxHeight: 200 }}
-          renderItem={renderLaunchItem}
-          data={data.launchesPast}
+          renderItem={renderPostItem}
+          data={data.posts.data}
         />
       )}
     </>
