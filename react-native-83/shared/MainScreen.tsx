@@ -1,5 +1,6 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React from 'react';
+import { useState, useEffect } from 'react';
+import { NativeModules } from 'react-native';
 import {
   Image,
   Pressable,
@@ -7,27 +8,27 @@ import {
   ScrollView,
   StyleSheet,
   View,
-} from "react-native";
-import { preview } from "radon-ide";
-import { AutomatedTests } from "./automatedTests";
+} from 'react-native';
+import { preview } from 'radon-ide';
+import { AutomatedTests } from './automatedTests';
 
-import { Button } from "./Button";
-import { gap, useScheme } from "./Colors";
-import { Text } from "./Text";
-import { getWebSocket, initWebSocket } from "./websocket";
-import TrackableButton from "./TrackableButton";
+import { Button } from './Button';
+import { gap, useScheme } from './Colors';
+import { Text } from './Text';
+import { getWebSocket, initWebSocket } from './websocket';
+import TrackableButton from './TrackableButton';
 
 preview(
   <TrackableButton
     id="preview-button"
     title="Preview Button"
     onPress={printLogs}
-  />
+  />,
 );
 
 function printLogs() {
   // put breakpoint on the next line
-  const text = "console.log()";
+  const text = 'console.log()';
   console.log(text);
 }
 
@@ -40,8 +41,8 @@ export function MainScreen() {
       setConnected(true);
     } else {
       initWebSocket(
-        (msg) => console.log("Got:", msg),
-        () => setConnected(true)
+        msg => console.log('Got:', msg),
+        () => setConnected(true),
       );
     }
   }, []);
@@ -73,7 +74,7 @@ export function MainScreen() {
           <Step
             label="Check uncaught exceptions"
             onPress={() => {
-              const tryToTrow = "expected error";
+              const tryToTrow = 'expected error';
               throw new Error(tryToTrow);
             }}
           >
@@ -84,13 +85,42 @@ export function MainScreen() {
             label="Fetch request visible in network panel"
             onPress={async () => {
               const response = await fetch(
-                "https://pokeapi.co/api/v2/pokemon/ditto"
+                'https://pokeapi.co/api/v2/pokemon/ditto',
               );
-              console.log("Response", response);
+              console.log('Response', response);
             }}
           >
             Activate network panel, click button and see if fetch request is
             visible
+          </Step>
+          <Step
+            label="HTTPBodyStream hanging request"
+            onPress={() => {
+              // Calls a native module that fires a POST with HTTPBodyStream
+              // backed by a CFStreamCreateBoundPair whose write end is never
+              // closed. The old synchronous read path would deadlock here.
+              NativeModules.StreamBodyTestModule.sendHangingStreamRequest(
+                'https://httpbin.org/post',
+              );
+              console.log('Hanging stream request sent');
+            }}
+          >
+            Activate network panel, click button. Without the fix the app
+            hangs. With the fix the request completes and the body appears in
+            the Payload tab via getRequestPostData.
+          </Step>
+          <Step
+            label="HTTPBodyStream delayed request (15s)"
+            onPress={() => {
+              NativeModules.StreamBodyTestModule.sendDelayedStreamRequest(
+                'https://httpbin.org/post',
+              );
+              console.log('Delayed stream request sent');
+            }}
+          >
+            Activate network panel, click button. The request should appear as
+            pending for ~15 seconds, then complete with the body visible in the
+            Payload tab via getRequestPostData.
           </Step>
           <Step label="Inspector button (left and right click)">
             Click inspector button, hover over components and jump to the
@@ -130,9 +160,9 @@ type StepProps = {
 function Step({ label, onPress, children }: StepProps) {
   const [expand, setExpand] = useState(false);
 
-  let content = <Text>{"• " + label}</Text>;
+  let content = <Text>{'• ' + label}</Text>;
   if (onPress) {
-    content = <Button inline title={"• " + label} onPress={onPress} />;
+    content = <Button inline title={'• ' + label} onPress={onPress} />;
   }
 
   return (
@@ -141,7 +171,7 @@ function Step({ label, onPress, children }: StepProps) {
         {content}
         <ExpandArrow
           expanded={expand}
-          onPress={() => setExpand((expanded) => !expanded)}
+          onPress={() => setExpand(expanded => !expanded)}
         />
       </View>
       {expand && <Text style={stepStyle.description}>{children}</Text>}
@@ -149,7 +179,7 @@ function Step({ label, onPress, children }: StepProps) {
   );
 }
 const stepStyle = StyleSheet.create({
-  row: { flexDirection: "row", justifyContent: "space-between" },
+  row: { flexDirection: 'row', justifyContent: 'space-between' },
   description: { marginLeft: gap * 2, fontSize: 12 },
 });
 
@@ -157,8 +187,8 @@ function Logo() {
   return (
     <View style={{ marginHorizontal: gap * 3 }}>
       <Image
-        source={require("./assets/radon.png")}
-        style={{ width: "100%", height: 200, objectFit: "contain" }}
+        source={require('./assets/radon.png')}
+        style={{ width: '100%', height: 200, objectFit: 'contain' }}
       />
     </View>
   );
@@ -172,7 +202,7 @@ function ExpandArrow({ expanded, onPress }: ExpandArrowProps) {
   const style = useExpandArrowStyle();
   return (
     <Pressable onPress={onPress} style={style.container}>
-      <Text style={style.text}>{expanded ? "↑" : "↓"}</Text>
+      <Text style={style.text}>{expanded ? '↑' : '↓'}</Text>
     </Pressable>
   );
 }
@@ -180,7 +210,7 @@ function useExpandArrowStyle() {
   const { colors, gap } = useScheme();
 
   return StyleSheet.create({
-    container: { paddingHorizontal: gap, justifyContent: "center" },
+    container: { paddingHorizontal: gap, justifyContent: 'center' },
     text: { color: colors.text },
   });
 }
