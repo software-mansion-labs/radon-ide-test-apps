@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Image,
   Pressable,
@@ -10,19 +10,18 @@ import {
 } from "react-native";
 import { preview } from "radon-ide";
 import { AutomatedTests } from "./automatedTests";
-import { Platform } from "react-native";
 
 import { Button } from "./Button";
 import { gap, useScheme } from "./Colors";
 import { Text } from "./Text";
 import { getWebSocket, initWebSocket } from "./websocket";
+import TrackableButton from "./TrackableButton";
 
 preview(
-  <Button
-    title="Button"
-    onPress={() => {
-      console.log("console.log()");
-    }}
+  <TrackableButton
+    id="preview-button"
+    title="Preview Button"
+    onPress={printLogs}
   />
 );
 
