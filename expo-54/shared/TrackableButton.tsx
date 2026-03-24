@@ -6,9 +6,8 @@ import {
   Pressable,
   Text,
   StyleSheet,
+  StatusBar,
 } from "react-native";
-import { StatusBar } from "react-native";
-import { Platform } from "react-native";
 import { getWebSocket } from "./websocket";
 
 const { width: phoneWidth, height: phoneHeight } = Dimensions.get("window");
@@ -43,6 +42,9 @@ const TrackableButton = ({ id, title, onPress }: TrackableButtonProps) => {
         measure((pos) => {
           ws.send(JSON.stringify({ position: pos, id: message.id }));
         });
+      } else if (message.message === `click:${id}`) {
+        onPress?.(id);
+        ws?.send(`{"action":"${id}"}`);
       }
     });
   }, [ws]);
