@@ -1,3 +1,3 @@
-import SecondView from "@/shared/SecondView";
+import SecondView from "@/../shared/SecondView";
 
 export default SecondView;
