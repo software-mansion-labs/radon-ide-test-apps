@@ -1,3 +1,3 @@
-import { MainScreen } from "@/shared/MainScreen";
+import { MainScreen } from "@/../shared/MainScreen";
 
 export default MainScreen;
