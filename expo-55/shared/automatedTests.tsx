@@ -16,7 +16,7 @@ import { useScheme } from "./Colors";
 import TrackableButton from "./TrackableButton";
 import { getWebSocket } from "./websocket";
 import router from "./ExpoRouter";
-import appConfig from "../../app.json";
+import appConfig from "../app.json";
 import { applyPolyfills, restoreOriginalGlobals } from "./polyfill";
 
 const appName = appConfig.name ? appConfig.name : appConfig.expo.name;
