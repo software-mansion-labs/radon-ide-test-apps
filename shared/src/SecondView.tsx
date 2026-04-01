@@ -1,7 +1,7 @@
 import { StyleSheet, View } from "react-native";
 
-import TrackableButton from "@/shared/TrackableButton";
-import { useScheme } from "@/shared/Colors";
+import TrackableButton from "./TrackableButton";
+import { useScheme } from "./Colors";
 import { useRouter } from "expo-router";
 
 export default function SecondView() {
@@ -53,7 +53,7 @@ function useStyle() {
       justifyContent: "center",
       alignItems: "center",
       gap: 20,
-      backgroundColor: colors.background,
-    },
+      backgroundColor: colors.background
+    }
   });
 }
