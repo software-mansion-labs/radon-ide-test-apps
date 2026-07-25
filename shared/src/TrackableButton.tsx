@@ -10,26 +10,43 @@ import {
 } from "react-native";
 import { getWebSocket } from "./websocket";
 
-const { width: phoneWidth, height: phoneHeight } = Dimensions.get("window");
-
 type TrackableButtonProps = {
   id: string;
   title: string;
   onPress?: (id: string) => void;
 };
 
+type ButtonPosition = {
+  height: number;
+  id: string;
+  width: number;
+  x: number;
+  y: number;
+};
+
 const TrackableButton = ({ id, title, onPress }: TrackableButtonProps) => {
   const ref = useRef<View>(null);
   const ws = getWebSocket();
 
-  const measure = (cb: (data: any) => void) => {
+  /**
+   * Reports the button's position normalized to the full device screen (what
+   * Radon streams). `measureInWindow` is window-relative, so on legacy Android
+   * the status-bar height is added to `y`; on iOS and edge-to-edge Android it's 0.
+   */
+  const measure = (cb: (position: ButtonPosition) => void) => {
     ref.current?.measureInWindow((x, y, width, height) => {
+      const screen = Dimensions.get("screen");
+      const window = Dimensions.get("window");
+
+      const topInset =
+        screen.height > window.height ? (StatusBar.currentHeight ?? 0) : 0;
+
       cb({
         id,
-        x: x / phoneWidth,
-        y: (y + (StatusBar.currentHeight ?? 0)) / phoneHeight,
-        width: width / phoneWidth,
-        height: height / phoneHeight,
+        x: x / screen.width,
+        y: (y + topInset) / screen.height,
+        width: width / screen.width,
+        height: height / screen.height,
       });
     });
   };
