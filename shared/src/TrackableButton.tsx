@@ -30,16 +30,16 @@ const TrackableButton = ({ id, title, onPress }: TrackableButtonProps) => {
 
   /**
    * Reports the button's position normalized to the full device screen (what
-   * Radon streams). `measureInWindow` is window-relative, so on legacy Android
-   * the status-bar height is added to `y`; on iOS and edge-to-edge Android it's 0.
+   * Radon streams). On Android `measureInWindow` is relative to the *visible*
+   * window frame, which starts below the status bar even when the app draws
+   * edge-to-edge - so the status-bar height is always added back. On iOS
+   * `StatusBar.currentHeight` is undefined and the term is 0.
    */
   const measure = (cb: (position: ButtonPosition) => void) => {
     ref.current?.measureInWindow((x, y, width, height) => {
+      // Read per call so rotation is picked up.
       const screen = Dimensions.get("screen");
-      const window = Dimensions.get("window");
-
-      const topInset =
-        screen.height > window.height ? (StatusBar.currentHeight ?? 0) : 0;
+      const topInset = StatusBar.currentHeight ?? 0;
 
       cb({
         id,
