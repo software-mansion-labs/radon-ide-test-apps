@@ -8,7 +8,7 @@ import {
   StyleSheet,
   StatusBar,
 } from "react-native";
-import { getWebSocket } from "./websocket";
+import { getWebSocket, onWebSocket } from "./websocket";
 
 type TrackableButtonProps = {
   id: string;
@@ -26,7 +26,6 @@ type ButtonPosition = {
 
 const TrackableButton = ({ id, title, onPress }: TrackableButtonProps) => {
   const ref = useRef<View>(null);
-  const ws = getWebSocket();
 
   /**
    * Reports the button's position normalized to the full device screen (what
@@ -52,26 +51,38 @@ const TrackableButton = ({ id, title, onPress }: TrackableButtonProps) => {
   };
 
   useEffect(() => {
-    if (!ws) return;
-    ws.addEventListener("message", (e: any) => {
+    let socket: WebSocket | null = null;
+    const handleMessage = (e: any) => {
       const message = JSON.parse(e.data);
       if (message.message === `getPosition:${id}`) {
         measure((pos) => {
-          ws.send(JSON.stringify({ position: pos, id: message.id }));
+          socket?.send(JSON.stringify({ position: pos, id: message.id }));
         });
       } else if (message.message === `click:${id}`) {
         onPress?.(id);
-        ws?.send(`{"action":"${id}"}`);
+        socket?.send(`{"action":"${id}"}`);
       }
+    };
+
+    // The socket may not exist yet when this button mounts (native tab bars
+    // mount every tab up front), so wait for it instead of checking once.
+    const unsubscribe = onWebSocket((ws) => {
+      socket = ws;
+      ws.addEventListener("message", handleMessage);
     });
-  }, [ws]);
+
+    return () => {
+      unsubscribe();
+      socket?.removeEventListener("message", handleMessage);
+    };
+  }, [id]);
 
   return (
     <Pressable
       style={styles.button}
       ref={ref}
       onPress={() => {
-        ws?.send(`{"action":"${id}"}`);
+        getWebSocket()?.send(`{"action":"${id}"}`);
         onPress?.(id);
       }}
     >

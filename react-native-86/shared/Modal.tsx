@@ -1,5 +1,5 @@
 import { StyleSheet, View } from "react-native";
-import TrackableButton from "@/shared/TrackableButton";
+import TrackableButton from "./TrackableButton";
 import { useRouter } from "expo-router";
 
 export default function ModalScreen() {
@@ -31,10 +31,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
-    gap: 20,
+    gap: 20
   },
   link: {
     marginTop: 15,
-    paddingVertical: 15,
-  },
+    paddingVertical: 15
+  }
 });

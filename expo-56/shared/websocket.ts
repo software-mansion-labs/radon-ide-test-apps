@@ -2,6 +2,23 @@ import { Platform } from "react-native";
 
 let ws: WebSocket | null = null;
 
+// Components that mount before MainScreen opens the socket - every screen of a
+// native tab bar is mounted up front, so the Explore tab's buttons are - have no
+// socket to listen on yet. They register here and are handed the socket once it
+// exists, so their listeners still attach within the early-frame replay window.
+const socketWaiters = new Set<(socket: WebSocket) => void>();
+
+export function onWebSocket(callback: (socket: WebSocket) => void): () => void {
+  if (ws) {
+    callback(ws);
+    return () => {};
+  }
+  socketWaiters.add(callback);
+  return () => {
+    socketWaiters.delete(callback);
+  };
+}
+
 // How long after the connection opens a newly attached "message" listener is
 // still given the frames that arrived before it existed. Long enough to cover
 // the mount that follows `onopen`, short enough that a component mounting later
@@ -67,6 +84,9 @@ export function initWebSocket(
       earlyFrames.push(e.data);
     }
   });
+
+  socketWaiters.forEach((callback) => callback(socket));
+  socketWaiters.clear();
 
   return ws;
 }
