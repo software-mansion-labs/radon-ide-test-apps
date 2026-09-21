@@ -14,7 +14,7 @@ import { preview } from "radon-ide";
 import { Button } from "./Button";
 import { useScheme } from "./Colors";
 import TrackableButton from "./TrackableButton";
-import { getWebSocket } from "./websocket";
+import { sendToServer, subscribeToServer } from "./websocket";
 import router from "./ExpoRouter";
 import appConfig from "../app.json";
 import { applyPolyfills, restoreOriginalGlobals } from "./polyfill";
@@ -78,7 +78,6 @@ function getAppName() {
 export function AutomatedTests() {
   const style = useStyle();
   const [elementVisible, setElementVisible] = useState(true);
-  const ws = getWebSocket();
 
   const prepareRequestOptions = ({
     method = "GET",
@@ -245,17 +244,16 @@ export function AutomatedTests() {
   };
 
   useEffect(() => {
-    if (!ws) return;
-    ws.addEventListener("message", (e: any) => {
-      const message = JSON.parse(e.data);
+    return subscribeToServer((data) => {
+      const message = JSON.parse(data);
       if (message.message === `getColorScheme`) {
-        ws.send(JSON.stringify({ value: getColorScheme(), id: message.id }));
+        sendToServer({ value: getColorScheme(), id: message.id });
       } else if (message.message === `getOrientation`) {
-        ws.send(JSON.stringify({ value: getOrientation(), id: message.id }));
+        sendToServer({ value: getOrientation(), id: message.id });
       } else if (message.message === `getFontSize`) {
-        ws.send(JSON.stringify({ value: getFontSize(), id: message.id }));
+        sendToServer({ value: getFontSize(), id: message.id });
       } else if (message.message === `getAppState`) {
-        ws.send(JSON.stringify({ value: getAppState(), id: message.id }));
+        sendToServer({ value: getAppState(), id: message.id });
       } else if (message.message === "fetchData") {
         const options = prepareRequestOptions(message);
 
@@ -274,10 +272,10 @@ export function AutomatedTests() {
       } else if (message.message === `fetchWithPolyfill`) {
         handlePolyfillTest(message);
       } else if (message.message === `getAppName`) {
-        ws.send(JSON.stringify({ value: getAppName(), id: message.id }));
+        sendToServer({ value: getAppName(), id: message.id });
       }
     });
-  }, [ws]);
+  }, []);
 
   return (
     <View style={style.mainContainer}>

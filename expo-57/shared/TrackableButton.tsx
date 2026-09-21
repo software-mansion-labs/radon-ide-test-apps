@@ -8,7 +8,7 @@ import {
   StyleSheet,
   StatusBar,
 } from "react-native";
-import { getWebSocket } from "./websocket";
+import { sendToServer, subscribeToServer } from "./websocket";
 
 type TrackableButtonProps = {
   id: string;
@@ -26,7 +26,15 @@ type ButtonPosition = {
 
 const TrackableButton = ({ id, title, onPress }: TrackableButtonProps) => {
   const ref = useRef<View>(null);
-  const ws = getWebSocket();
+  // Read at call time so the listener below - registered once per id - always
+  // invokes the handler from the latest render.
+  const onPressRef = useRef(onPress);
+  onPressRef.current = onPress;
+
+  const press = () => {
+    sendToServer({ action: id });
+    onPressRef.current?.(id);
+  };
 
   /**
    * Reports the button's position normalized to the full device screen (what
@@ -51,30 +59,24 @@ const TrackableButton = ({ id, title, onPress }: TrackableButtonProps) => {
     });
   };
 
+  // Subscribed for as long as the button is mounted, whether or not the socket
+  // exists yet - see `subscribeToServer`. Unsubscribing on unmount keeps a
+  // button from a screen that was navigated away from out of the answer.
   useEffect(() => {
-    if (!ws) return;
-    ws.addEventListener("message", (e: any) => {
-      const message = JSON.parse(e.data);
+    return subscribeToServer((data) => {
+      const message = JSON.parse(data);
       if (message.message === `getPosition:${id}`) {
         measure((pos) => {
-          ws.send(JSON.stringify({ position: pos, id: message.id }));
+          sendToServer({ position: pos, id: message.id });
         });
       } else if (message.message === `click:${id}`) {
-        onPress?.(id);
-        ws?.send(`{"action":"${id}"}`);
+        press();
       }
     });
-  }, [ws]);
+  }, [id]);
 
   return (
-    <Pressable
-      style={styles.button}
-      ref={ref}
-      onPress={() => {
-        ws?.send(`{"action":"${id}"}`);
-        onPress?.(id);
-      }}
-    >
+    <Pressable style={styles.button} ref={ref} onPress={press}>
       <Text>{title}</Text>
     </Pressable>
   );
