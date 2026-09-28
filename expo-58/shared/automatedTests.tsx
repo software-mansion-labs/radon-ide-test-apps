@@ -14,7 +14,7 @@ import { preview } from "radon-ide";
 import { Button } from "./Button";
 import { useScheme } from "./Colors";
 import TrackableButton from "./TrackableButton";
-import { getWebSocket } from "./websocket";
+import { sendToServer, subscribeToServer } from "./websocket";
 import router from "./ExpoRouter";
 import appConfig from "../app.json";
 import { applyPolyfills, restoreOriginalGlobals } from "./polyfill";
@@ -75,10 +75,61 @@ function getAppName() {
   return appName;
 }
 
+const BASE64_ALPHABET =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+function decodeBase64(base64: string): Uint8Array {
+  // Hermes has no `atob`, so decode by hand.
+  const clean = base64.replace(/[^A-Za-z0-9+/]/g, "");
+  const bytes = new Uint8Array(Math.floor((clean.length * 3) / 4));
+  let buffer = 0;
+  let bits = 0;
+  let index = 0;
+  for (const char of clean) {
+    buffer = (buffer << 6) | BASE64_ALPHABET.indexOf(char);
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      bytes[index++] = (buffer >> bits) & 0xff;
+    }
+  }
+  return bytes.subarray(0, index);
+}
+
+// Builds a FormData part describing a file for every runtime the test apps use:
+// - React Native's own fetch/XHR hands the part to native code, which only
+//   understands the `{ uri, name, type }` shape (`data:` URIs included).
+// - Expo SDK 56+ replaces global `fetch` with `expo/fetch`, which serialises
+//   the multipart body in JS and rejects `{ uri }` parts ("Unsupported
+//   FormDataPart implementation"). It accepts any File-like object exposing
+//   `name`, `type` and `bytes()`, so for `data:` URIs the decoded bytes are
+//   provided that way.
+// `bytes` is non-enumerable so it is not copied into the part React Native
+// sends over the bridge and does not show up in the Network panel payload.
+function createFormDataFilePart(value: {
+  uri: string;
+  type?: string;
+  name?: string;
+}) {
+  const part: { uri: string; type?: string; name?: string } = {
+    uri: value.uri,
+    type: value.type,
+    name: value.name
+  };
+  const dataUriMatch = /^data:[^,]*;base64,(.*)$/.exec(value.uri);
+  if (dataUriMatch) {
+    const bytes = decodeBase64(dataUriMatch[1]);
+    Object.defineProperty(part, "bytes", {
+      value: async () => bytes,
+      enumerable: false
+    });
+  }
+  return part;
+}
+
 export function AutomatedTests() {
   const style = useStyle();
   const [elementVisible, setElementVisible] = useState(true);
-  const ws = getWebSocket();
 
   const prepareRequestOptions = ({
     method = "GET",
@@ -98,11 +149,7 @@ export function AutomatedTests() {
           const value = body[key];
 
           if (value && typeof value === "object" && value._is_file) {
-            formData.append(key, {
-              uri: value.uri,
-              type: value.type,
-              name: value.name
-            } as any);
+            formData.append(key, createFormDataFilePart(value) as any);
           } else {
             formData.append(key, value);
           }
@@ -245,17 +292,16 @@ export function AutomatedTests() {
   };
 
   useEffect(() => {
-    if (!ws) return;
-    ws.addEventListener("message", (e: any) => {
-      const message = JSON.parse(e.data);
+    return subscribeToServer((data) => {
+      const message = JSON.parse(data);
       if (message.message === `getColorScheme`) {
-        ws.send(JSON.stringify({ value: getColorScheme(), id: message.id }));
+        sendToServer({ value: getColorScheme(), id: message.id });
       } else if (message.message === `getOrientation`) {
-        ws.send(JSON.stringify({ value: getOrientation(), id: message.id }));
+        sendToServer({ value: getOrientation(), id: message.id });
       } else if (message.message === `getFontSize`) {
-        ws.send(JSON.stringify({ value: getFontSize(), id: message.id }));
+        sendToServer({ value: getFontSize(), id: message.id });
       } else if (message.message === `getAppState`) {
-        ws.send(JSON.stringify({ value: getAppState(), id: message.id }));
+        sendToServer({ value: getAppState(), id: message.id });
       } else if (message.message === "fetchData") {
         const options = prepareRequestOptions(message);
 
@@ -274,10 +320,10 @@ export function AutomatedTests() {
       } else if (message.message === `fetchWithPolyfill`) {
         handlePolyfillTest(message);
       } else if (message.message === `getAppName`) {
-        ws.send(JSON.stringify({ value: getAppName(), id: message.id }));
+        sendToServer({ value: getAppName(), id: message.id });
       }
     });
-  }, [ws]);
+  }, []);
 
   return (
     <View style={style.mainContainer}>
